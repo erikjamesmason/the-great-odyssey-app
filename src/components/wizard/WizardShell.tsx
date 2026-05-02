@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { LIFE_PLAN_LABELS, type LifePlanType } from '@/lib/types'
-import { cn } from '@/lib/utils'
 import LifePlanEditor from './LifePlanEditor'
 import AiGuide from '../ai-guide/AiGuide'
 import { MessageCircle, X } from 'lucide-react'
@@ -13,6 +12,12 @@ interface WizardShellProps {
 }
 
 const PLAN_TYPES: LifePlanType[] = ['expected', 'alternative', 'wildcard']
+
+const QL_COLORS: Record<LifePlanType, string> = {
+  expected: 'var(--ql-l1)',
+  alternative: 'var(--ql-l2)',
+  wildcard: 'var(--ql-l3)',
+}
 
 export default function WizardShell({ odysseyPlan }: WizardShellProps) {
   const [activeType, setActiveType] = useState<LifePlanType>('expected')
@@ -25,49 +30,73 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
       {/* Main wizard area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Life selector tabs */}
-        <div className="flex border-b border-stone-800 px-6 pt-6 gap-2">
+        <div style={{
+          display: 'flex',
+          borderBottom: '1px solid var(--ql-rule)',
+          padding: '0 24px',
+        }}>
           {PLAN_TYPES.map(type => {
             const meta = LIFE_PLAN_LABELS[type]
-            const colorMap = {
-              expected: 'border-indigo-500 text-indigo-300',
-              alternative: 'border-emerald-500 text-emerald-300',
-              wildcard: 'border-amber-500 text-amber-300',
-            }
+            const color = QL_COLORS[type]
+            const active = activeType === type
             return (
               <button
                 key={type}
                 onClick={() => setActiveType(type)}
-                className={cn(
-                  'px-5 py-3 text-sm font-medium rounded-t-xl border-b-2 transition-colors',
-                  activeType === type
-                    ? colorMap[type]
-                    : 'border-transparent text-stone-500 hover:text-stone-300'
-                )}
+                style={{
+                  padding: '14px 20px',
+                  fontSize: 12,
+                  fontWeight: active ? 500 : 400,
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: active ? `2px solid ${color}` : '2px solid transparent',
+                  color: active ? 'var(--ql-ink)' : 'var(--ql-ink-faint)',
+                  cursor: 'pointer',
+                  fontFamily: "'Inter', sans-serif",
+                }}
               >
-                <span className="font-semibold">{meta.label}</span>
-                <span className="hidden sm:inline text-xs ml-2 opacity-60">— {meta.description}</span>
+                <span style={{ fontWeight: 600 }}>{meta.label}</span>
+                <span className="hidden sm:inline" style={{ fontSize: 11, marginLeft: 8, opacity: 0.6 }}>
+                  — {meta.description}
+                </span>
               </button>
             )
           })}
         </div>
 
         {/* Plan editor */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto" style={{ padding: 24 }}>
           {activePlan ? (
             <LifePlanEditor lifePlan={activePlan} type={activeType} />
           ) : (
-            <p className="text-stone-500 text-sm">No plan found for this type.</p>
+            <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)' }}>No plan found for this type.</p>
           )}
         </div>
       </div>
 
       {/* AI Guide panel */}
       {aiOpen ? (
-        <div className="w-96 border-l border-stone-800 flex flex-col shrink-0">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-stone-800">
-            <span className="text-sm font-semibold">AI Guide</span>
-            <button onClick={() => setAiOpen(false)} className="text-stone-500 hover:text-stone-300">
-              <X className="w-4 h-4" />
+        <div style={{
+          width: 384,
+          borderLeft: '1px solid var(--ql-rule)',
+          display: 'flex',
+          flexDirection: 'column',
+          flexShrink: 0,
+          background: 'var(--ql-paper-deep)',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 16px',
+            borderBottom: '1px solid var(--ql-rule)',
+          }}>
+            <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--ql-ink)' }}>AI Guide</span>
+            <button
+              onClick={() => setAiOpen(false)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ql-ink-faint)', display: 'flex' }}
+            >
+              <X style={{ width: 14, height: 14 }} />
             </button>
           </div>
           <AiGuide lifePlanId={activePlan?.id} lifePlanType={activeType} />
@@ -75,10 +104,26 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
       ) : (
         <button
           onClick={() => setAiOpen(true)}
-          className="fixed bottom-6 right-6 bg-indigo-600 hover:bg-indigo-500 rounded-full p-3.5 shadow-lg shadow-indigo-900/50 transition-colors z-10 flex items-center gap-2 pr-5"
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            background: 'var(--ql-ink)',
+            color: 'var(--ql-paper)',
+            border: 'none',
+            padding: '10px 16px 10px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: 'pointer',
+            zIndex: 10,
+            fontFamily: "'Inter', sans-serif",
+          }}
         >
-          <MessageCircle className="w-5 h-5" />
-          <span className="text-sm font-medium">AI Guide</span>
+          <MessageCircle style={{ width: 15, height: 15 }} />
+          AI Guide
         </button>
       )}
     </div>
