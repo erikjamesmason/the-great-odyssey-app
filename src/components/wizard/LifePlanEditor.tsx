@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { LIFE_PLAN_LABELS, MILESTONE_CATEGORY_LABELS, type LifePlanType, type MilestoneCategory } from '@/lib/types'
 import { Plus, Trash2 } from 'lucide-react'
@@ -39,7 +39,7 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
     lifePlan.questions?.length ? lifePlan.questions : ['', '']
   )
   const [milestones, setMilestones] = useState<{
-    id?: string; year: number; title: string; description: string; category: MilestoneCategory
+    id?: string; _clientKey?: number; year: number; title: string; description: string; category: MilestoneCategory
   }[]>(lifePlan.milestones || [])
   const [gauges, setGauges] = useState({
     resources: lifePlan.gauge_resources ?? 50,
@@ -48,45 +48,45 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
     coherence: lifePlan.gauge_coherence ?? 50,
   })
   const [saving, setSaving] = useState(false)
+  const [deletedIds, setDeletedIds] = useState<string[]>([])
+  const clientKeyRef = useRef(0)
 
   const save = useCallback(async () => {
     setSaving(true)
-    const supabase = createClient()
+    try {
+      const supabase = createClient()
 
-    await supabase.from('life_plans').update({
-      title,
-      questions: questions.filter(q => q.trim()),
-      gauge_resources: gauges.resources,
-      gauge_likeability: gauges.likeability,
-      gauge_confidence: gauges.confidence,
-      gauge_coherence: gauges.coherence,
-    }).eq('id', lifePlan.id)
+      await supabase.from('life_plans').update({
+        title,
+        questions: questions.filter(q => q.trim()),
+        gauge_resources: gauges.resources,
+        gauge_likeability: gauges.likeability,
+        gauge_confidence: gauges.confidence,
+        gauge_coherence: gauges.coherence,
+      }).eq('id', lifePlan.id)
 
-    const existingIds = milestones.filter(m => m.id).map(m => m.id!)
-    const toDelete = (lifePlan.milestones || [])
-      .filter((m: { id: string }) => !existingIds.includes(m.id))
-      .map((m: { id: string }) => m.id)
-
-    if (toDelete.length) {
-      await supabase.from('milestones').delete().in('id', toDelete)
-    }
-
-    for (let i = 0; i < milestones.length; i++) {
-      const m = milestones[i]
-      if (m.id) {
-        await supabase.from('milestones').update({
-          year: m.year, title: m.title, description: m.description, category: m.category, position: i,
-        }).eq('id', m.id)
-      } else if (m.title.trim()) {
-        await supabase.from('milestones').insert({
-          life_plan_id: lifePlan.id, year: m.year, title: m.title,
-          description: m.description, category: m.category, position: i,
-        })
+      if (deletedIds.length) {
+        await supabase.from('milestones').delete().in('id', deletedIds)
+        setDeletedIds([])
       }
-    }
 
-    setSaving(false)
-  }, [lifePlan.id, lifePlan.milestones, title, questions, gauges, milestones])
+      for (let i = 0; i < milestones.length; i++) {
+        const m = milestones[i]
+        if (m.id) {
+          await supabase.from('milestones').update({
+            year: m.year, title: m.title, description: m.description, category: m.category, position: i,
+          }).eq('id', m.id)
+        } else if (m.title.trim()) {
+          await supabase.from('milestones').insert({
+            life_plan_id: lifePlan.id, year: m.year, title: m.title,
+            description: m.description, category: m.category, position: i,
+          })
+        }
+      }
+    } finally {
+      setSaving(false)
+    }
+  }, [lifePlan.id, title, questions, gauges, milestones, deletedIds])
 
   function addQuestion() {
     if (questions.length < 3) setQuestions([...questions, ''])
@@ -97,11 +97,12 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
   }
 
   function removeQuestion(i: number) {
+    if (questions.length <= 1) return
     setQuestions(questions.filter((_, idx) => idx !== i))
   }
 
   function addMilestone(year: number) {
-    setMilestones([...milestones, { year, title: '', description: '', category: 'career' }])
+    setMilestones([...milestones, { _clientKey: ++clientKeyRef.current, year, title: '', description: '', category: 'career' }])
   }
 
   function updateMilestone(idx: number, field: string, val: string | number) {
@@ -109,6 +110,8 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
   }
 
   function removeMilestone(idx: number) {
+    const m = milestones[idx]
+    if (m.id) setDeletedIds(prev => [...prev, m.id!])
     setMilestones(milestones.filter((_, i) => i !== idx))
   }
 
@@ -266,7 +269,7 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 8 }}>
                   {yearMilestones.map(m => (
                     <MilestoneCard
-                      key={m.idx}
+                      key={m.id ?? `new-${m._clientKey}`}
                       milestone={m}
                       onUpdate={(field, val) => updateMilestone(m.idx, field, val)}
                       onRemove={() => removeMilestone(m.idx)}
