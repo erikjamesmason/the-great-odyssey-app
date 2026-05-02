@@ -6,7 +6,7 @@ import { Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface MilestoneCardProps {
   milestone: { title: string; description: string; category: MilestoneCategory }
-  color: string
+  color?: string
   onUpdate: (field: string, value: string) => void
   onRemove: () => void
 }

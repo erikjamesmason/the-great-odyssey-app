@@ -3,8 +3,7 @@
 import { useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { LIFE_PLAN_LABELS, MILESTONE_CATEGORY_LABELS, type LifePlanType, type MilestoneCategory } from '@/lib/types'
-import { cn } from '@/lib/utils'
-import { Plus, Trash2, GripVertical } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import DashboardGauges from './DashboardGauges'
 import MilestoneCard from './MilestoneCard'
 
@@ -18,14 +17,22 @@ const STEPS = ['title', 'questions', 'milestones', 'gauges'] as const
 type Step = typeof STEPS[number]
 
 const stepLabels: Record<Step, string> = {
-  title: '1. Give it a title',
-  questions: '2. Questions this life answers',
-  milestones: '3. Five-year timeline',
+  title: '1. Title',
+  questions: '2. Questions',
+  milestones: '3. Timeline',
   gauges: '4. Dashboard',
+}
+
+const QL_COLORS: Record<LifePlanType, string> = {
+  expected: 'var(--ql-l1)',
+  alternative: 'var(--ql-l2)',
+  wildcard: 'var(--ql-l3)',
 }
 
 export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) {
   const meta = LIFE_PLAN_LABELS[type]
+  const qlColor = QL_COLORS[type]
+
   const [step, setStep] = useState<Step>('title')
   const [title, setTitle] = useState(lifePlan.title || '')
   const [questions, setQuestions] = useState<string[]>(
@@ -42,13 +49,6 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
   })
   const [saving, setSaving] = useState(false)
 
-  const colorMap: Record<LifePlanType, string> = {
-    expected: 'indigo',
-    alternative: 'emerald',
-    wildcard: 'amber',
-  }
-  const color = colorMap[type]
-
   const save = useCallback(async () => {
     setSaving(true)
     const supabase = createClient()
@@ -62,7 +62,6 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
       gauge_coherence: gauges.coherence,
     }).eq('id', lifePlan.id)
 
-    // Upsert milestones
     const existingIds = milestones.filter(m => m.id).map(m => m.id!)
     const toDelete = (lifePlan.milestones || [])
       .filter((m: { id: string }) => !existingIds.includes(m.id))
@@ -94,9 +93,7 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
   }
 
   function updateQuestion(i: number, val: string) {
-    const updated = [...questions]
-    updated[i] = val
-    setQuestions(updated)
+    const updated = [...questions]; updated[i] = val; setQuestions(updated)
   }
 
   function removeQuestion(i: number) {
@@ -108,9 +105,7 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
   }
 
   function updateMilestone(idx: number, field: string, val: string | number) {
-    const updated = [...milestones]
-    updated[idx] = { ...updated[idx], [field]: val }
-    setMilestones(updated)
+    const updated = [...milestones]; updated[idx] = { ...updated[idx], [field]: val }; setMilestones(updated)
   }
 
   function removeMilestone(idx: number) {
@@ -120,21 +115,28 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
   const stepIndex = STEPS.indexOf(step)
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div style={{ maxWidth: 640, margin: '0 auto' }}>
       {/* Step navigation */}
-      <div className="flex gap-1 mb-8">
+      <div style={{ display: 'flex', gap: 0, marginBottom: 32 }}>
         {STEPS.map((s, i) => (
           <button
             key={s}
             onClick={() => setStep(s)}
-            className={cn(
-              'flex-1 py-2 text-xs rounded-lg transition-colors font-medium',
-              step === s
-                ? `bg-${color}-600/20 text-${color}-300 border border-${color}-700`
-                : i < stepIndex
-                ? 'bg-stone-800 text-stone-300'
-                : 'bg-stone-800/50 text-stone-600'
-            )}
+            style={{
+              flex: 1,
+              padding: '8px 4px',
+              fontSize: 11,
+              background: 'none',
+              border: 'none',
+              borderBottom: step === s ? `2px solid ${qlColor}` : '2px solid var(--ql-rule)',
+              color: step === s ? 'var(--ql-ink)' : i < stepIndex ? 'var(--ql-ink-soft)' : 'var(--ql-ink-faint)',
+              cursor: 'pointer',
+              fontWeight: step === s ? 500 : 400,
+              fontFamily: "'Inter', sans-serif",
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
           >
             {stepLabels[s]}
           </button>
@@ -143,54 +145,72 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
 
       {/* Step: Title */}
       {step === 'title' && (
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
-            <h2 className="text-xl font-semibold mb-1">{meta.label}: Give it a name</h2>
-            <p className="text-stone-400 text-sm">A short, evocative title — 3 to 6 words. What is the headline of this life?</p>
+            <h2 style={{ fontSize: 18, fontWeight: 400, color: 'var(--ql-ink)', margin: '0 0 6px' }}>
+              {meta.label}: Give it a name
+            </h2>
+            <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)', margin: 0 }}>
+              A short, evocative title — 3 to 6 words. What is the headline of this life?
+            </p>
           </div>
           <input
             type="text"
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder={`e.g. "Running My Own Firm" or "Living in the Wild"`}
-            className="w-full bg-stone-800 border border-stone-700 rounded-xl px-4 py-3 text-lg outline-none focus:border-indigo-500 transition-colors"
+            className="ql-input"
+            style={{ fontSize: 18 }}
           />
-          <p className="text-xs text-stone-500">
-            <span className={`text-${color}-400 font-semibold`}>{meta.label}</span> — {meta.description}
+          <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', margin: 0 }}>
+            <span style={{ color: qlColor, fontWeight: 600 }}>{meta.label}</span> — {meta.description}
           </p>
         </div>
       )}
 
       {/* Step: Questions */}
       {step === 'questions' && (
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
-            <h2 className="text-xl font-semibold mb-1">Questions this life answers</h2>
-            <p className="text-stone-400 text-sm">
+            <h2 style={{ fontSize: 18, fontWeight: 400, color: 'var(--ql-ink)', margin: '0 0 6px' }}>
+              Questions this life answers
+            </h2>
+            <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)', margin: 0 }}>
               What curiosities or uncertainties would living this life resolve? (2–3 questions)
             </p>
           </div>
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {questions.map((q, i) => (
-              <div key={i} className="flex gap-2">
+              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <input
                   type="text"
                   value={q}
                   onChange={e => updateQuestion(i, e.target.value)}
                   placeholder={`e.g. "Can I really make a living doing what I love?"`}
-                  className="flex-1 bg-stone-800 border border-stone-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-colors"
+                  className="ql-input"
                 />
                 {questions.length > 1 && (
-                  <button onClick={() => removeQuestion(i)} className="text-stone-600 hover:text-red-400 transition-colors">
-                    <Trash2 className="w-4 h-4" />
+                  <button
+                    onClick={() => removeQuestion(i)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ql-ink-faint)', display: 'flex', flexShrink: 0 }}
+                  >
+                    <Trash2 style={{ width: 14, height: 14 }} />
                   </button>
                 )}
               </div>
             ))}
           </div>
           {questions.length < 3 && (
-            <button onClick={addQuestion} className="flex items-center gap-2 text-sm text-stone-400 hover:text-stone-200 transition-colors">
-              <Plus className="w-4 h-4" />
+            <button
+              onClick={addQuestion}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                fontSize: 12, color: 'var(--ql-ink-soft)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontFamily: "'Inter', sans-serif",
+              }}
+            >
+              <Plus style={{ width: 13, height: 13 }} />
               Add another question
             </button>
           )}
@@ -199,10 +219,12 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
 
       {/* Step: Milestones */}
       {step === 'milestones' && (
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <div>
-            <h2 className="text-xl font-semibold mb-1">Five-year timeline</h2>
-            <p className="text-stone-400 text-sm">
+            <h2 style={{ fontSize: 18, fontWeight: 400, color: 'var(--ql-ink)', margin: '0 0 6px' }}>
+              Five-year timeline
+            </h2>
+            <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)', margin: 0 }}>
               Map out key milestones across each year. Think: career moves, experiences, skills, relationships, geography.
             </p>
           </div>
@@ -212,28 +234,40 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
               .filter(m => m.year === year)
             return (
               <div key={year}>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className={`text-xs font-bold text-${color}-400 bg-${color}-950 border border-${color}-800 rounded-full px-3 py-1`}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  <div style={{
+                    fontSize: 12,
+                    fontFamily: "'Caveat', cursive",
+                    color: qlColor,
+                    border: `1px solid ${qlColor}`,
+                    padding: '2px 10px',
+                  }}>
                     Year {year}
                   </div>
-                  <div className="flex-1 border-t border-stone-800" />
+                  <div style={{ flex: 1, height: 1, background: 'var(--ql-rule)' }} />
                   <button
                     onClick={() => addMilestone(year)}
-                    className="text-xs text-stone-500 hover:text-stone-300 flex items-center gap-1 transition-colors"
+                    style={{
+                      fontSize: 11, color: 'var(--ql-ink-faint)',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      fontFamily: "'Inter', sans-serif",
+                    }}
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus style={{ width: 12, height: 12 }} />
                     Add
                   </button>
                 </div>
                 {yearMilestones.length === 0 && (
-                  <p className="text-stone-600 text-xs ml-2 mb-2">No milestones yet — click Add to start.</p>
+                  <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', fontStyle: 'italic', marginLeft: 8, marginBottom: 8 }}>
+                    No milestones yet — click Add to start.
+                  </p>
                 )}
-                <div className="space-y-2 pl-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 8 }}>
                   {yearMilestones.map(m => (
                     <MilestoneCard
                       key={m.idx}
                       milestone={m}
-                      color={color}
                       onUpdate={(field, val) => updateMilestone(m.idx, field, val)}
                       onRemove={() => removeMilestone(m.idx)}
                     />
@@ -247,38 +281,69 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
 
       {/* Step: Gauges */}
       {step === 'gauges' && (
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
-            <h2 className="text-xl font-semibold mb-1">Dashboard</h2>
-            <p className="text-stone-400 text-sm">
+            <h2 style={{ fontSize: 18, fontWeight: 400, color: 'var(--ql-ink)', margin: '0 0 6px' }}>
+              Dashboard
+            </h2>
+            <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)', margin: 0 }}>
               Rate this life plan honestly across four dimensions.
             </p>
           </div>
-          <DashboardGauges gauges={gauges} color={color} onChange={setGauges} />
+          <DashboardGauges gauges={gauges} color={qlColor} onChange={setGauges} />
         </div>
       )}
 
-      {/* Footer: Save + navigation */}
-      <div className="flex items-center justify-between mt-8 pt-6 border-t border-stone-800">
+      {/* Footer */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 32,
+        paddingTop: 24,
+        borderTop: '1px solid var(--ql-rule)',
+      }}>
         <button
           onClick={() => setStep(STEPS[Math.max(0, stepIndex - 1)])}
           disabled={stepIndex === 0}
-          className="text-sm text-stone-400 hover:text-stone-200 disabled:opacity-30 transition-colors"
+          style={{
+            background: 'none', border: 'none',
+            cursor: stepIndex === 0 ? 'not-allowed' : 'pointer',
+            fontSize: 12,
+            color: stepIndex === 0 ? 'var(--ql-ink-faint)' : 'var(--ql-ink-soft)',
+            fontFamily: "'Inter', sans-serif",
+          }}
         >
           Back
         </button>
-        <div className="flex gap-3">
+        <div style={{ display: 'flex', gap: 12 }}>
           <button
             onClick={save}
             disabled={saving}
-            className="bg-stone-800 hover:bg-stone-700 disabled:opacity-50 rounded-xl px-4 py-2 text-sm transition-colors"
+            style={{
+              background: 'none',
+              border: '1px solid var(--ql-rule)',
+              padding: '8px 16px',
+              fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+              color: saving ? 'var(--ql-ink-faint)' : 'var(--ql-ink-soft)',
+              cursor: saving ? 'not-allowed' : 'pointer',
+              fontFamily: "'Inter', sans-serif",
+            }}
           >
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? 'Saving…' : 'Save'}
           </button>
           {stepIndex < STEPS.length - 1 && (
             <button
               onClick={() => setStep(STEPS[stepIndex + 1])}
-              className={`bg-${color}-600 hover:bg-${color}-500 rounded-xl px-4 py-2 text-sm font-medium transition-colors`}
+              style={{
+                background: qlColor,
+                border: 'none',
+                padding: '8px 16px',
+                fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+                color: 'white',
+                cursor: 'pointer',
+                fontFamily: "'Inter', sans-serif",
+              }}
             >
               Continue
             </button>
