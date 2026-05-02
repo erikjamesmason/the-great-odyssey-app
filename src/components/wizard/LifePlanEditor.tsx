@@ -35,10 +35,11 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
 
   const [step, setStep] = useState<Step>('title')
   const [title, setTitle] = useState(lifePlan.title || '')
+  const initialQuestions = (lifePlan.questions?.length ? lifePlan.questions : ['', '']) as string[]
   const [questions, setQuestions] = useState<{ key: number; text: string }[]>(
-    (lifePlan.questions?.length ? lifePlan.questions : ['', '']).map((t: string, i: number) => ({ key: i, text: t }))
+    initialQuestions.map((t, i) => ({ key: i, text: t }))
   )
-  const questionKeyRef = useRef(lifePlan.questions?.length ?? 2)
+  const questionKeyRef = useRef(initialQuestions.length)
   const [milestones, setMilestones] = useState<{
     id?: string; _clientKey?: number; year: number; title: string; description: string; category: MilestoneCategory
   }[]>(lifePlan.milestones || [])
@@ -91,7 +92,10 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
   }, [lifePlan.id, title, questions, gauges, milestones, deletedIds])
 
   function addQuestion() {
-    if (questions.length < 3) setQuestions([...questions, { key: ++questionKeyRef.current, text: '' }])
+    if (questions.length < 3) {
+      const key = questionKeyRef.current++
+      setQuestions([...questions, { key, text: '' }])
+    }
   }
 
   function updateQuestion(key: number, val: string) {
@@ -108,7 +112,9 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
   }
 
   function updateMilestone(idx: number, field: string, val: string | number) {
-    const updated = [...milestones]; updated[idx] = { ...updated[idx], [field]: val }; setMilestones(updated)
+    const updated = [...milestones]
+    updated[idx] = { ...updated[idx], [field]: val }
+    setMilestones(updated)
   }
 
   function removeMilestone(idx: number) {
