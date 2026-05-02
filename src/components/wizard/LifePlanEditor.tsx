@@ -35,9 +35,10 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
 
   const [step, setStep] = useState<Step>('title')
   const [title, setTitle] = useState(lifePlan.title || '')
-  const [questions, setQuestions] = useState<string[]>(
-    lifePlan.questions?.length ? lifePlan.questions : ['', '']
+  const [questions, setQuestions] = useState<{ key: number; text: string }[]>(
+    (lifePlan.questions?.length ? lifePlan.questions : ['', '']).map((t: string, i: number) => ({ key: i, text: t }))
   )
+  const questionKeyRef = useRef(lifePlan.questions?.length ?? 2)
   const [milestones, setMilestones] = useState<{
     id?: string; _clientKey?: number; year: number; title: string; description: string; category: MilestoneCategory
   }[]>(lifePlan.milestones || [])
@@ -58,7 +59,7 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
 
       await supabase.from('life_plans').update({
         title,
-        questions: questions.filter(q => q.trim()),
+        questions: questions.map(q => q.text).filter(t => t.trim()),
         gauge_resources: gauges.resources,
         gauge_likeability: gauges.likeability,
         gauge_confidence: gauges.confidence,
@@ -67,7 +68,6 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
 
       if (deletedIds.length) {
         await supabase.from('milestones').delete().in('id', deletedIds)
-        setDeletedIds([])
       }
 
       for (let i = 0; i < milestones.length; i++) {
@@ -83,22 +83,24 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
           })
         }
       }
+
+      setDeletedIds([])
     } finally {
       setSaving(false)
     }
   }, [lifePlan.id, title, questions, gauges, milestones, deletedIds])
 
   function addQuestion() {
-    if (questions.length < 3) setQuestions([...questions, ''])
+    if (questions.length < 3) setQuestions([...questions, { key: ++questionKeyRef.current, text: '' }])
   }
 
-  function updateQuestion(i: number, val: string) {
-    const updated = [...questions]; updated[i] = val; setQuestions(updated)
+  function updateQuestion(key: number, val: string) {
+    setQuestions(questions.map(q => q.key === key ? { ...q, text: val } : q))
   }
 
-  function removeQuestion(i: number) {
+  function removeQuestion(key: number) {
     if (questions.length <= 1) return
-    setQuestions(questions.filter((_, idx) => idx !== i))
+    setQuestions(questions.filter(q => q.key !== key))
   }
 
   function addMilestone(year: number) {
@@ -183,18 +185,18 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
             </p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {questions.map((q, i) => (
-              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {questions.map(q => (
+              <div key={q.key} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <input
                   type="text"
-                  value={q}
-                  onChange={e => updateQuestion(i, e.target.value)}
+                  value={q.text}
+                  onChange={e => updateQuestion(q.key, e.target.value)}
                   placeholder={`e.g. "Can I really make a living doing what I love?"`}
                   className="ql-input"
                 />
                 {questions.length > 1 && (
                   <button
-                    onClick={() => removeQuestion(i)}
+                    onClick={() => removeQuestion(q.key)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ql-ink-faint)', display: 'flex', flexShrink: 0 }}
                   >
                     <Trash2 style={{ width: 14, height: 14 }} />
