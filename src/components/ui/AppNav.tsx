@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { LayoutDashboard } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 
 interface AppNavProps {
@@ -85,7 +86,7 @@ export default function AppNav({ user }: AppNavProps) {
 
 function NavItem({ href, icon, label, active }: {
   href: string
-  icon: React.ReactNode
+  icon: ReactNode
   label: string
   active: boolean
 }) {
