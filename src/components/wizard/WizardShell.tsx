@@ -1,14 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { LIFE_PLAN_LABELS, type LifePlanType } from '@/lib/types'
+import { LIFE_PLAN_LABELS, type LifePlanType, type OdysseyPlan } from '@/lib/types'
 import LifePlanEditor from './LifePlanEditor'
 import AiGuide from '../ai-guide/AiGuide'
 import { MessageCircle, X } from 'lucide-react'
 
 interface WizardShellProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  odysseyPlan: any
+  odysseyPlan: OdysseyPlan
 }
 
 const PLAN_TYPES: LifePlanType[] = ['expected', 'alternative', 'wildcard']
@@ -23,7 +22,7 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
   const [activeType, setActiveType] = useState<LifePlanType>('expected')
   const [aiOpen, setAiOpen] = useState(false)
 
-  const activePlan = odysseyPlan.life_plans?.find((lp: { type: string }) => lp.type === activeType)
+  const activePlan = odysseyPlan.life_plans?.find(lp => lp.type === activeType)
 
   return (
     <div className="flex h-full">
@@ -34,6 +33,8 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
           display: 'flex',
           borderBottom: '1px solid var(--ql-rule)',
           padding: '0 24px',
+          paddingTop: 0,
+          gap: 0,
         }}>
           {PLAN_TYPES.map(type => {
             const meta = LIFE_PLAN_LABELS[type]
@@ -94,12 +95,16 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
             <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--ql-ink)' }}>AI Guide</span>
             <button
               onClick={() => setAiOpen(false)}
+              aria-label="Close AI Guide"
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ql-ink-faint)', display: 'flex' }}
             >
               <X style={{ width: 14, height: 14 }} />
             </button>
           </div>
-          <AiGuide lifePlanId={activePlan?.id} lifePlanType={activeType} />
+          {activePlan
+            ? <AiGuide lifePlanId={activePlan.id} lifePlanType={activeType} />
+            : <p style={{ padding: 16, fontSize: 13, color: 'var(--ql-ink-faint)' }}>No plan selected.</p>
+          }
         </div>
       ) : (
         <button
