@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import { Wand2, Rows3, Network, FlaskConical, ChevronLeft } from 'lucide-react'
 
 interface PlanTabNavProps {
@@ -11,23 +10,42 @@ interface PlanTabNavProps {
 }
 
 const tabs = [
-  { label: 'Wizard', href: 'wizard', icon: <Wand2 className="w-4 h-4" /> },
-  { label: 'Timeline', href: 'timeline', icon: <Rows3 className="w-4 h-4" /> },
-  { label: 'Roadmap', href: 'roadmap', icon: <Network className="w-4 h-4" /> },
-  { label: 'Prototype', href: 'prototype', icon: <FlaskConical className="w-4 h-4" /> },
+  { label: 'Wizard',    href: 'wizard',    icon: <Wand2        style={{ width: 13, height: 13 }} /> },
+  { label: 'Timeline',  href: 'timeline',  icon: <Rows3        style={{ width: 13, height: 13 }} /> },
+  { label: 'Roadmap',   href: 'roadmap',   icon: <Network      style={{ width: 13, height: 13 }} /> },
+  { label: 'Prototype', href: 'prototype', icon: <FlaskConical style={{ width: 13, height: 13 }} /> },
 ]
 
 export default function PlanTabNav({ planId, planName }: PlanTabNavProps) {
   const pathname = usePathname()
 
   return (
-    <div className="border-b border-stone-800 bg-stone-950 px-6 py-0 flex items-center gap-6 shrink-0">
-      <Link href="/dashboard" className="flex items-center gap-1 text-stone-500 hover:text-stone-300 transition-colors text-sm mr-2">
-        <ChevronLeft className="w-4 h-4" />
+    <div style={{
+      borderBottom: '1px solid var(--ql-rule)',
+      background: 'var(--ql-paper-deep)',
+      padding: '0 24px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 24,
+      flexShrink: 0,
+    }}>
+      <Link
+        href="/dashboard"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          fontSize: 12,
+          color: 'var(--ql-ink-faint)',
+          textDecoration: 'none',
+          marginRight: 8,
+        }}
+      >
+        <ChevronLeft style={{ width: 14, height: 14 }} />
         <span className="hidden sm:block">{planName}</span>
       </Link>
 
-      <div className="flex">
+      <div style={{ display: 'flex' }}>
         {tabs.map(tab => {
           const href = `/plans/${planId}/${tab.href}`
           const active = pathname.startsWith(href)
@@ -35,12 +53,17 @@ export default function PlanTabNav({ planId, planName }: PlanTabNavProps) {
             <Link
               key={tab.href}
               href={href}
-              className={cn(
-                'flex items-center gap-2 px-4 py-4 text-sm border-b-2 transition-colors',
-                active
-                  ? 'border-indigo-500 text-white'
-                  : 'border-transparent text-stone-500 hover:text-stone-300'
-              )}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '14px 16px',
+                fontSize: 12,
+                fontWeight: active ? 500 : 400,
+                color: active ? 'var(--ql-ink)' : 'var(--ql-ink-faint)',
+                borderBottom: active ? '2px solid var(--ql-ink)' : '2px solid transparent',
+                textDecoration: 'none',
+              }}
             >
               {tab.icon}
               {tab.label}
