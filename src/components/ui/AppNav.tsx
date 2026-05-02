@@ -3,8 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { cn } from '@/lib/utils'
-import { Compass, LayoutDashboard, LogOut } from 'lucide-react'
+import { LayoutDashboard } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 
 interface AppNavProps {
@@ -23,37 +22,90 @@ export default function AppNav({ user }: AppNavProps) {
   }
 
   return (
-    <nav className="w-16 flex flex-col items-center py-6 border-r border-stone-800 bg-stone-950 shrink-0">
-      <Link href="/dashboard" className="mb-8">
-        <Compass className="w-7 h-7 text-indigo-400" />
-      </Link>
+    <nav style={{
+      width: 200,
+      flexShrink: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '24px 0',
+      borderRight: '1px solid var(--ql-rule)',
+      background: 'var(--ql-paper-deep)',
+    }}>
+      <div style={{ padding: '0 20px', marginBottom: 32 }}>
+        <div style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: 'var(--ql-ink-soft)',
+          lineHeight: 1.4,
+        }}>
+          The Great Odyssey
+        </div>
+        <div style={{
+          fontFamily: "'Caveat', cursive",
+          fontSize: 16,
+          color: 'var(--ql-ink-faint)',
+          marginTop: 2,
+        }}>
+          Vol. I
+        </div>
+      </div>
 
-      <div className="flex-1 flex flex-col items-center gap-2">
-        <NavItem href="/dashboard" icon={<LayoutDashboard className="w-5 h-5" />} label="Dashboard" active={pathname === '/dashboard'} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <NavItem
+          href="/dashboard"
+          label="Dashboard"
+          active={pathname === '/dashboard'}
+          icon={<LayoutDashboard style={{ width: 14, height: 14 }} />}
+        />
       </div>
 
       <button
         onClick={handleSignOut}
         title={`Sign out (${user.email})`}
-        className="text-stone-500 hover:text-stone-300 transition-colors"
+        style={{
+          margin: '0 20px',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          textAlign: 'left',
+          fontSize: 11,
+          letterSpacing: '0.05em',
+          color: 'var(--ql-ink-faint)',
+          padding: '4px 0',
+          fontFamily: "'Inter', sans-serif",
+        }}
       >
-        <LogOut className="w-5 h-5" />
+        Sign out
       </button>
     </nav>
   )
 }
 
-function NavItem({ href, icon, label, active }: { href: string; icon: React.ReactNode; label: string; active: boolean }) {
+function NavItem({ href, icon, label, active }: {
+  href: string
+  icon: React.ReactNode
+  label: string
+  active: boolean
+}) {
   return (
     <Link
       href={href}
-      title={label}
-      className={cn(
-        'w-10 h-10 rounded-xl flex items-center justify-center transition-colors',
-        active ? 'bg-indigo-600 text-white' : 'text-stone-500 hover:text-stone-200 hover:bg-stone-800'
-      )}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '8px 20px',
+        fontSize: 13,
+        fontWeight: active ? 500 : 400,
+        color: active ? 'var(--ql-ink)' : 'var(--ql-ink-soft)',
+        borderLeft: active ? '2px solid var(--ql-ink)' : '2px solid transparent',
+        textDecoration: 'none',
+      }}
     >
       {icon}
+      {label}
     </Link>
   )
 }
