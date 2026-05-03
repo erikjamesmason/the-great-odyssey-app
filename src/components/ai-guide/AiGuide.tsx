@@ -43,7 +43,6 @@ export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const meta = LIFE_PLAN_LABELS[lifePlanType]
   const qlColor = QL_COLORS[lifePlanType]
@@ -66,6 +65,7 @@ export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lifePlanId, lifePlanType, messages: newMessages }),
       })
+      if (!res.ok) throw new Error(`api error ${res.status}`)
       const data = await res.json()
       setMessages([...newMessages, { role: 'assistant', content: data.message }])
     } catch {
@@ -183,7 +183,6 @@ export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
           background: 'var(--ql-paper)',
         }}>
           <textarea
-            ref={textareaRef}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
