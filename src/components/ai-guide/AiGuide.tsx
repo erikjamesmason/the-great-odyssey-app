@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { type LifePlanType, LIFE_PLAN_LABELS } from '@/lib/types'
-import { cn } from '@/lib/utils'
 import { Send, Loader2, Sparkles } from 'lucide-react'
 
 interface Message {
@@ -22,7 +21,7 @@ const STARTER_PROMPTS: Record<LifePlanType, string[]> = {
     'My dashboard shows high likeability but low resources — help me think through this',
   ],
   alternative: [
-    'I\'m struggling to imagine a truly different life — help me brainstorm',
+    "I'm struggling to imagine a truly different life — help me brainstorm",
     'What questions should this alternative life answer?',
     'What would be the first step to explore this path?',
   ],
@@ -33,6 +32,12 @@ const STARTER_PROMPTS: Record<LifePlanType, string[]> = {
   ],
 }
 
+const QL_COLORS: Record<LifePlanType, string> = {
+  expected: 'var(--ql-l1)',
+  alternative: 'var(--ql-l2)',
+  wildcard: 'var(--ql-l3)',
+}
+
 export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -41,6 +46,7 @@ export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const meta = LIFE_PLAN_LABELS[lifePlanType]
+  const qlColor = QL_COLORS[lifePlanType]
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -79,32 +85,49 @@ export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
     }
   }
 
-  const colorMap: Record<LifePlanType, string> = {
-    expected: 'text-indigo-400',
-    alternative: 'text-emerald-400',
-    wildcard: 'text-amber-400',
-  }
-
   return (
     <div className="flex flex-col h-full">
       {/* Messages */}
-      <div className="flex-1 overflow-auto px-4 py-4 space-y-4">
+      <div className="flex-1 overflow-auto" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {messages.length === 0 && (
-          <div className="space-y-4">
-            <div className="text-center">
-              <Sparkles className={cn('w-6 h-6 mx-auto mb-2', colorMap[lifePlanType])} />
-              <p className="text-sm font-medium">AI Guide</p>
-              <p className="text-xs text-stone-500 mt-1">
-                Here to help with <span className={colorMap[lifePlanType]}>{meta.label}</span>
+          <div>
+            <div style={{
+              textAlign: 'center',
+              paddingBottom: 16,
+              borderBottom: '1px solid var(--ql-rule)',
+              marginBottom: 16,
+            }}>
+              <Sparkles style={{ width: 16, height: 16, color: qlColor, margin: '0 auto 8px' }} />
+              <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--ql-ink)', margin: '0 0 2px' }}>AI Guide</p>
+              <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', margin: 0 }}>
+                Here to help with{' '}
+                <span style={{ color: qlColor }}>{meta.label}</span>
               </p>
             </div>
-            <div className="space-y-2">
-              <p className="text-xs text-stone-600 uppercase tracking-wider">Quick starts</p>
+            <p style={{
+              fontSize: 10, fontWeight: 600, letterSpacing: '0.1em',
+              textTransform: 'uppercase', color: 'var(--ql-ink-faint)',
+              marginBottom: 8,
+            }}>
+              Quick starts
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
               {STARTER_PROMPTS[lifePlanType].map((prompt, i) => (
                 <button
                   key={i}
                   onClick={() => sendMessage(prompt)}
-                  className="w-full text-left text-xs bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-xl p-3 text-stone-300 transition-colors"
+                  style={{
+                    textAlign: 'left',
+                    fontSize: 12,
+                    background: 'var(--ql-paper)',
+                    border: '1px solid var(--ql-rule)',
+                    borderBottom: i < STARTER_PROMPTS[lifePlanType].length - 1 ? 'none' : '1px solid var(--ql-rule)',
+                    padding: '10px 12px',
+                    color: 'var(--ql-ink-soft)',
+                    cursor: 'pointer',
+                    fontFamily: "'Inter', sans-serif",
+                    lineHeight: 1.4,
+                  }}
                 >
                   {prompt}
                 </button>
@@ -114,26 +137,35 @@ export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
         )}
 
         {messages.map((msg, i) => (
-          <div key={i} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-            <div
-              className={cn(
-                'max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
-                msg.role === 'user'
-                  ? 'bg-indigo-600 text-white rounded-br-sm'
-                  : 'bg-stone-800 text-stone-200 rounded-bl-sm'
-              )}
-            >
+          <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+            <div style={{
+              maxWidth: '90%',
+              padding: '10px 14px',
+              fontSize: 13,
+              lineHeight: 1.5,
+              ...(msg.role === 'user'
+                ? { background: 'var(--ql-ink)', color: 'var(--ql-paper)' }
+                : { background: 'var(--ql-paper-deep)', color: 'var(--ql-ink-soft)', border: '1px solid var(--ql-rule)' }
+              ),
+            }}>
               {msg.content.split('\n').map((line, j) => (
-                <span key={j}>{line}{j < msg.content.split('\n').length - 1 && <br />}</span>
+                <span key={j}>
+                  {line}
+                  {j < msg.content.split('\n').length - 1 && <br />}
+                </span>
               ))}
             </div>
           </div>
         ))}
 
         {loading && (
-          <div className="flex justify-start">
-            <div className="bg-stone-800 rounded-2xl rounded-bl-sm px-4 py-3">
-              <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <div style={{
+              background: 'var(--ql-paper-deep)',
+              border: '1px solid var(--ql-rule)',
+              padding: '10px 14px',
+            }}>
+              <Loader2 style={{ width: 14, height: 14, color: 'var(--ql-ink-faint)' }} className="animate-spin" />
             </div>
           </div>
         )}
@@ -142,26 +174,52 @@ export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
       </div>
 
       {/* Input */}
-      <div className="px-4 pb-4 shrink-0">
-        <div className="flex gap-2 bg-stone-800 border border-stone-700 rounded-xl p-2">
+      <div style={{ padding: '12px 16px', flexShrink: 0, borderTop: '1px solid var(--ql-rule)' }}>
+        <div style={{
+          display: 'flex',
+          gap: 8,
+          border: '1px solid var(--ql-rule)',
+          padding: 8,
+          background: 'var(--ql-paper)',
+        }}>
           <textarea
             ref={textareaRef}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask your guide..."
+            placeholder="Ask your guide…"
             rows={2}
-            className="flex-1 bg-transparent text-sm resize-none outline-none placeholder-stone-600"
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              fontSize: 13,
+              resize: 'none',
+              outline: 'none',
+              color: 'var(--ql-ink)',
+              fontFamily: "'Inter', sans-serif",
+            }}
           />
           <button
             onClick={() => sendMessage(input)}
             disabled={loading || !input.trim()}
-            className="self-end bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg p-2 transition-colors"
+            style={{
+              alignSelf: 'flex-end',
+              background: 'var(--ql-ink)',
+              border: 'none',
+              padding: 8,
+              cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+              opacity: loading || !input.trim() ? 0.4 : 1,
+              color: 'var(--ql-paper)',
+              display: 'flex',
+            }}
           >
-            <Send className="w-4 h-4" />
+            <Send style={{ width: 14, height: 14 }} />
           </button>
         </div>
-        <p className="text-xs text-stone-600 mt-1 text-center">Enter to send, Shift+Enter for newline</p>
+        <p style={{ fontSize: 11, color: 'var(--ql-ink-faint)', marginTop: 4, textAlign: 'center' }}>
+          Enter to send, Shift+Enter for newline
+        </p>
       </div>
     </div>
   )
