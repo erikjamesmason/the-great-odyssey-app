@@ -77,16 +77,18 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
         </div>
       </div>
 
-      {/* AI Guide panel */}
-      {aiOpen ? (
-        <div style={{
-          width: 384,
-          borderLeft: '1px solid var(--ql-rule)',
-          display: 'flex',
-          flexDirection: 'column',
-          flexShrink: 0,
-          background: 'var(--ql-paper-deep)',
-        }}>
+      {/* AI guide — desktop: 384px flex child (sm+) */}
+      {aiOpen && (
+        <div
+          className="hidden sm:flex"
+          style={{
+            width: 384,
+            borderLeft: '1px solid var(--ql-rule)',
+            flexDirection: 'column',
+            flexShrink: 0,
+            background: 'var(--ql-paper-deep)',
+          }}
+        >
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -110,7 +112,48 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
               : <p style={{ padding: 16, fontSize: 13, color: 'var(--ql-ink-faint)' }}>No plan selected.</p>
           })()}
         </div>
-      ) : (
+      )}
+
+      {/* AI guide — mobile: full-screen overlay (<640px) */}
+      {aiOpen && (
+        <div
+          className="flex sm:hidden"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 50,
+            flexDirection: 'column',
+            background: 'var(--ql-paper-deep)',
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 16px',
+            borderBottom: '1px solid var(--ql-rule)',
+            flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--ql-ink)' }}>AI Guide</span>
+            <button
+              onClick={() => setAiOpen(false)}
+              aria-label="Close AI Guide"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ql-ink-faint)', display: 'flex' }}
+            >
+              <X style={{ width: 14, height: 14 }} />
+            </button>
+          </div>
+          {(() => {
+            const plan = odysseyPlan.life_plans?.find(lp => lp.type === activeType)
+            return plan
+              ? <AiGuide lifePlanId={plan.id} lifePlanType={activeType} />
+              : <p style={{ padding: 16, fontSize: 13, color: 'var(--ql-ink-faint)' }}>No plan selected.</p>
+          })()}
+        </div>
+      )}
+
+      {/* FAB — shows when AI guide is closed */}
+      {!aiOpen && (
         <button
           onClick={() => setAiOpen(true)}
           style={{
