@@ -148,7 +148,10 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
         {STEPS.map((s, i) => (
           <button
             key={s}
-            onClick={() => setStep(s)}
+            onClick={async () => {
+              if (s !== step) await save().catch(() => {})
+              setStep(s)
+            }}
             style={{
               flex: 1,
               padding: '8px 4px',
@@ -331,7 +334,10 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
         borderTop: '1px solid var(--ql-rule)',
       }}>
         <button
-          onClick={() => setStep(STEPS[Math.max(0, stepIndex - 1)])}
+          onClick={async () => {
+            await save().catch(() => {})
+            setStep(STEPS[Math.max(0, stepIndex - 1)])
+          }}
           disabled={stepIndex === 0}
           style={{
             background: 'none', border: 'none',
