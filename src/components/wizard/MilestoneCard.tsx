@@ -4,14 +4,16 @@ import { useState } from 'react'
 import { MILESTONE_CATEGORY_LABELS, type MilestoneCategory } from '@/lib/types'
 import { Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 
+type MilestoneField = 'title' | 'description' | 'category'
+
 interface MilestoneCardProps {
   milestone: { title: string; description: string; category: MilestoneCategory }
-  onUpdate: (field: string, value: string) => void
+  onUpdate: (field: MilestoneField, value: string) => void
   onRemove: () => void
 }
 
 export default function MilestoneCard({ milestone, onUpdate, onRemove }: MilestoneCardProps) {
-  const [expanded, setExpanded] = useState(!milestone.title)
+  const [expanded, setExpanded] = useState(milestone.title === '')
 
   return (
     <div style={{

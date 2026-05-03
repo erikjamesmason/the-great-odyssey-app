@@ -1,42 +1,37 @@
 'use client'
 
-interface Gauges {
-  resources: number
-  likeability: number
-  confidence: number
-  coherence: number
-}
+import type { DashboardGauges } from '@/lib/types'
 
 interface DashboardGaugesProps {
-  gauges: Gauges
+  gauges: DashboardGauges
   color: string
-  onChange: (gauges: Gauges) => void
+  onChange: (gauges: DashboardGauges) => void
 }
 
 const GAUGE_META = [
   {
-    key: 'resources' as keyof Gauges,
+    key: 'resources' as keyof DashboardGauges,
     label: 'Resources',
     description: 'Do you have the time, money, skills, and contacts to pull this off?',
     low: 'Very few resources',
     high: 'Fully resourced',
   },
   {
-    key: 'likeability' as keyof Gauges,
+    key: 'likeability' as keyof DashboardGauges,
     label: 'Likeability',
     description: 'How much do you emotionally want this? Does it excite you?',
     low: 'Cold',
     high: 'On fire',
   },
   {
-    key: 'confidence' as keyof Gauges,
+    key: 'confidence' as keyof DashboardGauges,
     label: 'Confidence',
     description: 'How confident are you that you could actually execute this?',
     low: 'Very unsure',
     high: 'Very confident',
   },
   {
-    key: 'coherence' as keyof Gauges,
+    key: 'coherence' as keyof DashboardGauges,
     label: 'Coherence',
     description: 'Does this plan feel consistent with who you are and what you value?',
     low: 'Feels wrong',
@@ -45,7 +40,7 @@ const GAUGE_META = [
 ]
 
 export default function DashboardGauges({ gauges, color, onChange }: DashboardGaugesProps) {
-  function handleChange(key: keyof Gauges, value: number) {
+  function handleChange(key: keyof DashboardGauges, value: number) {
     onChange({ ...gauges, [key]: value })
   }
 
