@@ -2,14 +2,13 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { LIFE_PLAN_LABELS, MILESTONE_CATEGORY_LABELS, type LifePlanType, type MilestoneCategory } from '@/lib/types'
+import { LIFE_PLAN_LABELS, MILESTONE_CATEGORY_LABELS, type LifePlan, type LifePlanType, type MilestoneCategory } from '@/lib/types'
 import { Plus, Trash2 } from 'lucide-react'
 import DashboardGauges from './DashboardGauges'
 import MilestoneCard from './MilestoneCard'
 
 interface LifePlanEditorProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  lifePlan: any
+  lifePlan: LifePlan
   type: LifePlanType
 }
 

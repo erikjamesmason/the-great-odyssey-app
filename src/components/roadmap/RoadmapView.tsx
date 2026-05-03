@@ -11,11 +11,10 @@ import {
   BackgroundVariant,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { type LifePlanType } from '@/lib/types'
+import { type LifePlanType, type OdysseyPlan } from '@/lib/types'
 
 interface RoadmapViewProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  odysseyPlan: any
+  odysseyPlan: OdysseyPlan
 }
 
 const PLAN_TYPES: LifePlanType[] = ['expected', 'alternative', 'wildcard']
@@ -40,8 +39,7 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
 
     const colors = TYPE_COLORS[activeType]
     const milestones = [...(lp.milestones || [])].sort(
-      (a: { year: number; position: number }, b: { year: number; position: number }) =>
-        a.year !== b.year ? a.year - b.year : a.position - b.position
+      (a, b) => a.year !== b.year ? a.year - b.year : (a.position ?? 0) - (b.position ?? 0)
     )
 
     const LANE_W = 260
@@ -50,7 +48,7 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
 
     const byYear: Record<number, typeof milestones> = {}
     for (let y = 1; y <= 5; y++) byYear[y] = []
-    milestones.forEach((m: { year: number }) => { if (byYear[m.year]) byYear[m.year].push(m) })
+    milestones.forEach((m) => { if (byYear[m.year]) byYear[m.year].push(m) })
 
     const nodes: Node[] = []
     const edges: Edge[] = []
@@ -76,7 +74,7 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
       })
     }
 
-    milestones.forEach((m: { id: string; year: number; title: string; category: string }, i: number) => {
+    milestones.forEach((m, i: number) => {
       const yearItems = byYear[m.year]
       const posInYear = yearItems.indexOf(m)
       nodes.push({

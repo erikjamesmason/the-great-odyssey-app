@@ -1,10 +1,9 @@
 'use client'
 
-import { MILESTONE_CATEGORY_LABELS, type LifePlanType, type MilestoneCategory, type Milestone } from '@/lib/types'
+import { MILESTONE_CATEGORY_LABELS, type LifePlanType, type MilestoneCategory, type Milestone, type OdysseyPlan } from '@/lib/types'
 
 interface TimelineViewProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  odysseyPlan: any
+  odysseyPlan: OdysseyPlan
 }
 
 const PLAN_TYPES: LifePlanType[] = ['expected', 'alternative', 'wildcard']
