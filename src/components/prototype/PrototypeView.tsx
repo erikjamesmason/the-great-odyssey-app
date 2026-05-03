@@ -2,24 +2,11 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { LIFE_PLAN_LABELS, type LifePlanType, type PrototypeType, type PrototypeStatus } from '@/lib/types'
+import { LIFE_PLAN_LABELS, type Prototype, type OdysseyPlan, type LifePlanType, type PrototypeType, type PrototypeStatus } from '@/lib/types'
 import { Plus, Trash2, FlaskConical, Users, BookOpen, Rocket } from 'lucide-react'
 
-interface Prototype {
-  id: string
-  life_plan_id: string
-  type: PrototypeType
-  title: string
-  description: string
-  status: PrototypeStatus
-  scheduled_date: string | null
-  notes: string
-  created_at: string
-}
-
 interface PrototypeViewProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  odysseyPlan: any
+  odysseyPlan: OdysseyPlan
   initialPrototypes: Prototype[]
 }
 
@@ -73,28 +60,27 @@ export default function PrototypeView({ odysseyPlan, initialPrototypes }: Protot
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     const supabase = createClient()
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('prototypes')
       .insert({ ...form, scheduled_date: form.scheduled_date || null })
       .select()
       .single()
-    if (data) {
-      setPrototypes([data, ...prototypes])
-      setAdding(false)
-      setForm({ ...form, title: '', description: '', notes: '' })
-    }
+    if (error || !data) return
+    setPrototypes([data, ...prototypes])
+    setAdding(false)
+    setForm({ ...form, title: '', description: '', notes: '', scheduled_date: '' })
   }
 
   async function handleStatusChange(id: string, status: PrototypeStatus) {
     const supabase = createClient()
-    await supabase.from('prototypes').update({ status }).eq('id', id)
-    setPrototypes(prototypes.map(p => p.id === id ? { ...p, status } : p))
+    const { error } = await supabase.from('prototypes').update({ status }).eq('id', id)
+    if (!error) setPrototypes(prototypes.map(p => p.id === id ? { ...p, status } : p))
   }
 
   async function handleDelete(id: string) {
     const supabase = createClient()
-    await supabase.from('prototypes').delete().eq('id', id)
-    setPrototypes(prototypes.filter(p => p.id !== id))
+    const { error } = await supabase.from('prototypes').delete().eq('id', id)
+    if (!error) setPrototypes(prototypes.filter(p => p.id !== id))
   }
 
   return (
@@ -308,7 +294,7 @@ export default function PrototypeView({ odysseyPlan, initialPrototypes }: Protot
                     )}
                     {p.scheduled_date && (
                       <p style={{ fontSize: 11, color: 'var(--ql-ink-faint)', margin: 0 }}>
-                        Scheduled: {new Date(p.scheduled_date).toLocaleDateString()}
+                        Scheduled: {new Date(p.scheduled_date + 'T00:00:00').toLocaleDateString()}
                       </p>
                     )}
                   </div>

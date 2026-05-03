@@ -51,7 +51,7 @@ export interface Prototype {
   title: string
   description: string
   status: PrototypeStatus
-  date: string | null
+  scheduled_date: string | null
   notes: string
   created_at: string
   updated_at: string
