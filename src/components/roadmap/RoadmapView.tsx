@@ -34,6 +34,7 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
   const lifePlans = odysseyPlan.life_plans || []
 
   const { nodes, edges } = useMemo(() => {
+    const lifePlans = odysseyPlan.life_plans || []
     const lp = lifePlans.find((l: { type: string }) => l.type === activeType)
     if (!lp) return { nodes: [], edges: [] }
 
@@ -74,7 +75,7 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
       })
     }
 
-    milestones.forEach((m, i: number) => {
+    milestones.forEach((m) => {
       const yearItems = byYear[m.year]
       const posInYear = yearItems.indexOf(m)
       nodes.push({
@@ -148,7 +149,7 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
     }
 
     return { nodes, edges }
-  }, [activeType, lifePlans])
+  }, [activeType, odysseyPlan.life_plans])
 
   return (
     <div className="flex flex-col h-full">

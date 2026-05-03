@@ -1,6 +1,6 @@
 'use client'
 
-import { MILESTONE_CATEGORY_LABELS, type LifePlanType, type MilestoneCategory, type Milestone, type OdysseyPlan } from '@/lib/types'
+import { MILESTONE_CATEGORY_LABELS, type LifePlanType, type Milestone, type OdysseyPlan } from '@/lib/types'
 
 interface TimelineViewProps {
   odysseyPlan: OdysseyPlan
