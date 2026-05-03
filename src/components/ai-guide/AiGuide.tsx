@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { type LifePlanType, LIFE_PLAN_LABELS } from '@/lib/types'
 import { Send, Loader2, Sparkles } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -148,12 +150,28 @@ export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
                 : { background: 'var(--ql-paper-deep)', color: 'var(--ql-ink-soft)', border: '1px solid var(--ql-rule)' }
               ),
             }}>
-              {msg.content.split('\n').map((line, j) => (
-                <span key={j}>
-                  {line}
-                  {j < msg.content.split('\n').length - 1 && <br />}
-                </span>
-              ))}
+              {msg.role === 'user' ? (
+                msg.content
+              ) : (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ children }) => <p style={{ margin: '0 0 8px', lineHeight: 1.5 }}>{children}</p>,
+                    strong: ({ children }) => <strong style={{ fontWeight: 600, color: 'var(--ql-ink)' }}>{children}</strong>,
+                    em: ({ children }) => <em style={{ fontStyle: 'italic' }}>{children}</em>,
+                    ul: ({ children }) => <ul style={{ margin: '0 0 8px', paddingLeft: 16 }}>{children}</ul>,
+                    ol: ({ children }) => <ol style={{ margin: '0 0 8px', paddingLeft: 16 }}>{children}</ol>,
+                    li: ({ children }) => <li style={{ marginBottom: 2 }}>{children}</li>,
+                    h1: ({ children }) => <p style={{ fontWeight: 600, fontSize: 14, margin: '0 0 6px', color: 'var(--ql-ink)' }}>{children}</p>,
+                    h2: ({ children }) => <p style={{ fontWeight: 600, fontSize: 13, margin: '0 0 6px', color: 'var(--ql-ink)' }}>{children}</p>,
+                    h3: ({ children }) => <p style={{ fontWeight: 600, fontSize: 13, margin: '0 0 4px', color: 'var(--ql-ink)' }}>{children}</p>,
+                    code: ({ children }) => <code style={{ fontFamily: 'monospace', fontSize: 12, background: 'var(--ql-rule)', padding: '1px 4px' }}>{children}</code>,
+                    blockquote: ({ children }) => <blockquote style={{ margin: '0 0 8px', paddingLeft: 10, borderLeft: `2px solid var(--ql-rule)`, color: 'var(--ql-ink-faint)' }}>{children}</blockquote>,
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              )}
             </div>
           </div>
         ))}

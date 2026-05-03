@@ -49,15 +49,21 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
     coherence: lifePlan.gauge_coherence ?? 50,
   })
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [deletedIds, setDeletedIds] = useState<string[]>([])
   const clientKeyRef = useRef(0)
 
   const save = useCallback(async () => {
     setSaving(true)
+    setSaveError(null)
     try {
       const supabase = createClient()
 
-      await supabase.from('life_plans').update({
+      // verify session is active before any writes
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('not authenticated — session missing in browser client')
+
+      const { error: lpError } = await supabase.from('life_plans').update({
         title,
         questions: questions.map(q => q.text).filter(t => t.trim()),
         gauge_resources: gauges.resources,
@@ -65,26 +71,41 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
         gauge_confidence: gauges.confidence,
         gauge_coherence: gauges.coherence,
       }).eq('id', lifePlan.id)
+      if (lpError) throw new Error(`life_plans update: ${lpError.message}`)
 
       if (deletedIds.length) {
-        await supabase.from('milestones').delete().in('id', deletedIds)
+        const { error: delError } = await supabase.from('milestones').delete().in('id', deletedIds)
+        if (delError) throw new Error(`milestones delete: ${delError.message}`)
       }
 
+      const updatedMilestones = [...milestones]
       for (let i = 0; i < milestones.length; i++) {
         const m = milestones[i]
         if (m.id) {
-          await supabase.from('milestones').update({
+          const { error: updateError } = await supabase.from('milestones').update({
             year: m.year, title: m.title, description: m.description, category: m.category, position: i,
           }).eq('id', m.id)
-        } else if (m.title.trim()) {
-          await supabase.from('milestones').insert({
-            life_plan_id: lifePlan.id, year: m.year, title: m.title,
-            description: m.description, category: m.category, position: i,
-          })
+          if (updateError) throw new Error(`milestone update: ${updateError.message}`)
+        } else {
+          const { data: inserted, error: insertError } = await supabase
+            .from('milestones')
+            .insert({
+              life_plan_id: lifePlan.id, year: m.year, title: m.title,
+              description: m.description, category: m.category, position: i,
+            })
+            .select('id')
+            .single()
+          if (insertError) throw new Error(`milestone insert: ${insertError.message}`)
+          if (inserted) updatedMilestones[i] = { ...m, id: inserted.id }
         }
       }
 
+      setMilestones(updatedMilestones)
       setDeletedIds([])
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Save failed'
+      setSaveError(msg)
+      throw err
     } finally {
       setSaving(false)
     }
@@ -126,12 +147,30 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
+      {/* Save error banner */}
+      {saveError && (
+        <div style={{
+          background: '#fef2f2',
+          border: '1px solid #fca5a5',
+          padding: '10px 14px',
+          marginBottom: 16,
+          fontSize: 12,
+          color: '#b91c1c',
+          fontFamily: "'Inter', sans-serif",
+        }}>
+          Save error: {saveError}
+        </div>
+      )}
+
       {/* Step navigation */}
       <div style={{ display: 'flex', gap: 0, marginBottom: 32 }}>
         {STEPS.map((s, i) => (
           <button
             key={s}
-            onClick={() => setStep(s)}
+            onClick={async () => {
+              if (s !== step) await save().catch(() => {})
+              setStep(s)
+            }}
             style={{
               flex: 1,
               padding: '8px 4px',
@@ -314,7 +353,10 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
         borderTop: '1px solid var(--ql-rule)',
       }}>
         <button
-          onClick={() => setStep(STEPS[Math.max(0, stepIndex - 1)])}
+          onClick={async () => {
+            await save().catch(() => {})
+            setStep(STEPS[Math.max(0, stepIndex - 1)])
+          }}
           disabled={stepIndex === 0}
           style={{
             background: 'none', border: 'none',
@@ -326,36 +368,42 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
         >
           Back
         </button>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button
-            onClick={save}
-            disabled={saving}
-            style={{
-              background: 'none',
-              border: '1px solid var(--ql-rule)',
-              padding: '8px 16px',
-              fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: saving ? 'var(--ql-ink-faint)' : 'var(--ql-ink-soft)',
-              cursor: saving ? 'not-allowed' : 'pointer',
-              fontFamily: "'Inter', sans-serif",
-            }}
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-          {stepIndex < STEPS.length - 1 && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+          {stepIndex < STEPS.length - 1 ? (
             <button
-              onClick={() => setStep(STEPS[stepIndex + 1])}
+              onClick={async () => {
+                try { await save(); setStep(STEPS[stepIndex + 1]) } catch { /* error shown inline */ }
+              }}
+              disabled={saving}
               style={{
                 background: qlColor,
                 border: 'none',
                 padding: '8px 16px',
                 fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
                 color: 'white',
-                cursor: 'pointer',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                opacity: saving ? 0.6 : 1,
                 fontFamily: "'Inter', sans-serif",
               }}
             >
-              Continue
+              {saving ? 'Saving…' : 'Save & Continue'}
+            </button>
+          ) : (
+            <button
+              onClick={async () => { try { await save() } catch { /* error shown inline */ } }}
+              disabled={saving}
+              style={{
+                background: 'var(--ql-ink)',
+                border: 'none',
+                padding: '8px 16px',
+                fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+                color: 'var(--ql-paper)',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                opacity: saving ? 0.6 : 1,
+                fontFamily: "'Inter', sans-serif",
+              }}
+            >
+              {saving ? 'Saving…' : 'Save'}
             </button>
           )}
         </div>
