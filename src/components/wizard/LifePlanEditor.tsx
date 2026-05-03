@@ -49,15 +49,17 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
     coherence: lifePlan.gauge_coherence ?? 50,
   })
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [deletedIds, setDeletedIds] = useState<string[]>([])
   const clientKeyRef = useRef(0)
 
   const save = useCallback(async () => {
     setSaving(true)
+    setSaveError(null)
     try {
       const supabase = createClient()
 
-      await supabase.from('life_plans').update({
+      const { error: lpError } = await supabase.from('life_plans').update({
         title,
         questions: questions.map(q => q.text).filter(t => t.trim()),
         gauge_resources: gauges.resources,
@@ -65,26 +67,41 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
         gauge_confidence: gauges.confidence,
         gauge_coherence: gauges.coherence,
       }).eq('id', lifePlan.id)
+      if (lpError) throw new Error(`life_plans update: ${lpError.message}`)
 
       if (deletedIds.length) {
-        await supabase.from('milestones').delete().in('id', deletedIds)
+        const { error: delError } = await supabase.from('milestones').delete().in('id', deletedIds)
+        if (delError) throw new Error(`milestones delete: ${delError.message}`)
       }
 
+      const updatedMilestones = [...milestones]
       for (let i = 0; i < milestones.length; i++) {
         const m = milestones[i]
         if (m.id) {
-          await supabase.from('milestones').update({
+          const { error: updateError } = await supabase.from('milestones').update({
             year: m.year, title: m.title, description: m.description, category: m.category, position: i,
           }).eq('id', m.id)
+          if (updateError) throw new Error(`milestone update: ${updateError.message}`)
         } else if (m.title.trim()) {
-          await supabase.from('milestones').insert({
-            life_plan_id: lifePlan.id, year: m.year, title: m.title,
-            description: m.description, category: m.category, position: i,
-          })
+          const { data: inserted, error: insertError } = await supabase
+            .from('milestones')
+            .insert({
+              life_plan_id: lifePlan.id, year: m.year, title: m.title,
+              description: m.description, category: m.category, position: i,
+            })
+            .select('id')
+            .single()
+          if (insertError) throw new Error(`milestone insert: ${insertError.message}`)
+          if (inserted) updatedMilestones[i] = { ...m, id: inserted.id }
         }
       }
 
+      setMilestones(updatedMilestones)
       setDeletedIds([])
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Save failed'
+      setSaveError(msg)
+      throw err
     } finally {
       setSaving(false)
     }
@@ -326,10 +343,17 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
         >
           Back
         </button>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+          {saveError && (
+            <p style={{ fontSize: 11, color: '#b91c1c', margin: 0, maxWidth: 260, textAlign: 'right' }}>
+              {saveError}
+            </p>
+          )}
           {stepIndex < STEPS.length - 1 ? (
             <button
-              onClick={async () => { await save(); setStep(STEPS[stepIndex + 1]) }}
+              onClick={async () => {
+                try { await save(); setStep(STEPS[stepIndex + 1]) } catch { /* error shown inline */ }
+              }}
               disabled={saving}
               style={{
                 background: qlColor,
@@ -346,7 +370,7 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
             </button>
           ) : (
             <button
-              onClick={save}
+              onClick={async () => { try { await save() } catch { /* error shown inline */ } }}
               disabled={saving}
               style={{
                 background: 'var(--ql-ink)',
