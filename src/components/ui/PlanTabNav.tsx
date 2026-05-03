@@ -53,11 +53,11 @@ export default function PlanTabNav({ planId, planName }: PlanTabNavProps) {
             <Link
               key={tab.href}
               href={href}
+              className="px-2.5 sm:px-4 py-3.5"
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                padding: '14px 16px',
                 fontSize: 12,
                 fontWeight: active ? 500 : 400,
                 color: active ? 'var(--ql-ink)' : 'var(--ql-ink-faint)',
@@ -66,7 +66,7 @@ export default function PlanTabNav({ planId, planName }: PlanTabNavProps) {
               }}
             >
               {tab.icon}
-              {tab.label}
+              <span className="hidden sm:inline">{tab.label}</span>
             </Link>
           )
         })}

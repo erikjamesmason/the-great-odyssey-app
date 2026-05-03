@@ -18,7 +18,7 @@ export default async function DashboardPage() {
   const LIFE_COLORS = ['var(--ql-l1)', 'var(--ql-l2)', 'var(--ql-l3)']
 
   return (
-    <div style={{ padding: '40px 32px', maxWidth: 860, margin: '0 auto' }}>
+    <div className="px-4 py-10 sm:px-8" style={{ maxWidth: 860, margin: '0 auto' }}>
       {/* Frontispiece header */}
       <div style={{ marginBottom: 40 }}>
         <div style={{
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Three life columns with ink-line markers */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-px">
                   {LIFE_TYPES.map((type, idx) => {
                     const lp = plan.life_plans?.find((l: { type: string }) => l.type === type)
                     const color = LIFE_COLORS[idx]
