@@ -1,42 +1,37 @@
 'use client'
 
-interface Gauges {
-  resources: number
-  likeability: number
-  confidence: number
-  coherence: number
-}
+import type { DashboardGauges } from '@/lib/types'
 
 interface DashboardGaugesProps {
-  gauges: Gauges
+  gauges: DashboardGauges
   color: string
-  onChange: (gauges: Gauges) => void
+  onChange: (gauges: DashboardGauges) => void
 }
 
 const GAUGE_META = [
   {
-    key: 'resources' as keyof Gauges,
+    key: 'resources' as keyof DashboardGauges,
     label: 'Resources',
     description: 'Do you have the time, money, skills, and contacts to pull this off?',
     low: 'Very few resources',
     high: 'Fully resourced',
   },
   {
-    key: 'likeability' as keyof Gauges,
+    key: 'likeability' as keyof DashboardGauges,
     label: 'Likeability',
     description: 'How much do you emotionally want this? Does it excite you?',
     low: 'Cold',
     high: 'On fire',
   },
   {
-    key: 'confidence' as keyof Gauges,
+    key: 'confidence' as keyof DashboardGauges,
     label: 'Confidence',
     description: 'How confident are you that you could actually execute this?',
     low: 'Very unsure',
     high: 'Very confident',
   },
   {
-    key: 'coherence' as keyof Gauges,
+    key: 'coherence' as keyof DashboardGauges,
     label: 'Coherence',
     description: 'Does this plan feel consistent with who you are and what you value?',
     low: 'Feels wrong',
@@ -45,49 +40,58 @@ const GAUGE_META = [
 ]
 
 export default function DashboardGauges({ gauges, color, onChange }: DashboardGaugesProps) {
-  function handleChange(key: keyof Gauges, value: number) {
+  function handleChange(key: keyof DashboardGauges, value: number) {
     onChange({ ...gauges, [key]: value })
   }
 
   return (
-    <div className="space-y-8">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       {GAUGE_META.map(({ key, label, description, low, high }) => {
         const value = gauges[key]
         return (
           <div key={key}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-medium text-sm">{label}</span>
-              <span className="text-lg font-bold text-stone-300">{value}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--ql-ink)' }}>{label}</span>
+              <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--ql-ink-soft)', fontFamily: "'Caveat', cursive" }}>{value}</span>
             </div>
-            <p className="text-xs text-stone-500 mb-3">{description}</p>
-            <div className="relative">
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={value}
-                onChange={e => handleChange(key, Number(e.target.value))}
-                className="w-full accent-indigo-500 cursor-pointer"
-              />
-              <div className="flex justify-between text-xs text-stone-600 mt-1">
-                <span>{low}</span>
-                <span>{high}</span>
-              </div>
+            <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', margin: '0 0 10px' }}>{description}</p>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={value}
+              onChange={e => handleChange(key, Number(e.target.value))}
+              style={{ width: '100%', accentColor: color, cursor: 'pointer' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--ql-ink-faint)', marginTop: 4 }}>
+              <span>{low}</span>
+              <span>{high}</span>
             </div>
-            {/* Visual bar */}
-            <div className="mt-2 h-1.5 bg-stone-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-indigo-500 rounded-full transition-all"
-                style={{ width: `${value}%` }}
-              />
+            {/* hairline gauge bar */}
+            <div style={{ marginTop: 8, height: 1, background: 'var(--ql-rule)', position: 'relative' }}>
+              <div style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                height: 1,
+                width: `${value}%`,
+                background: color,
+                transition: 'width 0.15s',
+              }} />
             </div>
           </div>
         )
       })}
 
-      {/* Conflict hint */}
       {gauges.likeability > 75 && gauges.resources < 30 && (
-        <div className="bg-amber-950/50 border border-amber-800 rounded-xl p-4 text-sm text-amber-300">
+        <div style={{
+          background: 'var(--ql-paper-deep)',
+          border: '1px solid var(--ql-rule)',
+          borderLeft: '3px solid var(--ql-l3)',
+          padding: '12px 16px',
+          fontSize: 13,
+          color: 'var(--ql-ink-soft)',
+        }}>
           <strong>Heads up:</strong> You love this path but feel low on resources. Talk to your AI guide about concrete ways to close that gap.
         </div>
       )}

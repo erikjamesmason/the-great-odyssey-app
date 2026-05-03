@@ -1,19 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function SignupPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  async function handleSignup(e: React.FormEvent) {
+  async function handleSignup(e: FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -34,15 +32,28 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="text-center max-w-sm">
-          <div className="text-4xl mb-4">✉️</div>
-          <h2 className="text-xl font-semibold mb-2">Check your email</h2>
-          <p className="text-stone-400 text-sm">
-            We sent a confirmation link to <span className="text-stone-200">{email}</span>.
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0 16px',
+        background: 'var(--ql-paper)',
+      }}>
+        <div style={{ textAlign: 'center', maxWidth: 320 }}>
+          <div style={{ fontSize: 28, marginBottom: 16 }}>✉</div>
+          <h2 style={{ fontSize: 18, fontWeight: 400, color: 'var(--ql-ink)', marginBottom: 10 }}>
+            Check your email
+          </h2>
+          <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)', lineHeight: 1.6 }}>
+            We sent a confirmation link to{' '}
+            <span style={{ color: 'var(--ql-ink-soft)' }}>{email}</span>.
             Click it to activate your account and begin your odyssey.
           </p>
-          <Link href="/login" className="inline-block mt-6 text-sm text-indigo-400 hover:text-indigo-300">
+          <Link
+            href="/login"
+            style={{ display: 'inline-block', marginTop: 24, fontSize: 12, color: 'var(--ql-ink-soft)', textUnderlineOffset: 3 }}
+          >
             Back to sign in
           </Link>
         </div>
@@ -51,55 +62,106 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold tracking-tight mb-2">The Great Odyssey</h1>
-          <p className="text-stone-400 text-sm">Three lives. One remarkable future.</p>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '0 16px',
+      background: 'var(--ql-paper)',
+    }}>
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <div style={{
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase',
+            color: 'var(--ql-ink-faint)',
+            marginBottom: 14,
+          }}>
+            The Great Odyssey
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 300, color: 'var(--ql-ink)', margin: 0, letterSpacing: '-0.02em' }}>
+            Create an account
+          </h1>
+          <div style={{ width: 32, height: 1, background: 'var(--ql-rule)', margin: '16px auto 0' }} />
         </div>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-8">
-          <h2 className="text-xl font-semibold mb-6">Create an account</h2>
-          <form onSubmit={handleSignup} className="space-y-4">
-            <div>
-              <label className="block text-sm text-stone-400 mb-1.5">Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full bg-stone-800 border border-stone-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition-colors"
-                placeholder="you@example.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-stone-400 mb-1.5">Password</label>
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full bg-stone-800 border border-stone-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition-colors"
-                placeholder="At least 6 characters"
-              />
-            </div>
-            {error && <p className="text-red-400 text-sm">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg py-2.5 text-sm font-medium transition-colors"
-            >
-              {loading ? 'Creating account...' : 'Create account'}
-            </button>
-          </form>
-          <p className="text-center text-sm text-stone-400 mt-6">
-            Already have an account?{' '}
-            <Link href="/login" className="text-indigo-400 hover:text-indigo-300">
-              Sign in
-            </Link>
-          </p>
-        </div>
+        <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'var(--ql-ink-faint)',
+              marginBottom: 8,
+            }}>
+              Email
+            </label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="ql-input"
+            />
+          </div>
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'var(--ql-ink-faint)',
+              marginBottom: 8,
+            }}>
+              Password
+            </label>
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="At least 6 characters"
+              className="ql-input"
+            />
+          </div>
+          {error && (
+            <p style={{ color: '#8b3a3a', fontSize: 13, margin: 0 }}>{error}</p>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              background: 'none',
+              border: '1px solid var(--ql-ink)',
+              padding: '12px',
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: loading ? 'var(--ql-ink-faint)' : 'var(--ql-ink)',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontFamily: "'Inter', sans-serif",
+            }}
+          >
+            {loading ? 'Creating account…' : 'Create account'}
+          </button>
+        </form>
+
+        <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--ql-ink-faint)', marginTop: 24 }}>
+          Already have an account?{' '}
+          <Link href="/login" style={{ color: 'var(--ql-ink-soft)', textUnderlineOffset: 3 }}>
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   )

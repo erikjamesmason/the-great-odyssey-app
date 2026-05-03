@@ -11,20 +11,22 @@ import {
   BackgroundVariant,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { LIFE_PLAN_LABELS, type LifePlanType } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { type LifePlanType, type OdysseyPlan } from '@/lib/types'
 
 interface RoadmapViewProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  odysseyPlan: any
+  odysseyPlan: OdysseyPlan
 }
 
 const PLAN_TYPES: LifePlanType[] = ['expected', 'alternative', 'wildcard']
 
-const typeColors: Record<LifePlanType, { bg: string; border: string; text: string }> = {
-  expected: { bg: '#1e1b4b', border: '#6366f1', text: '#a5b4fc' },
-  alternative: { bg: '#022c22', border: '#10b981', text: '#6ee7b7' },
-  wildcard: { bg: '#451a03', border: '#f59e0b', text: '#fcd34d' },
+const TYPE_COLORS: Record<LifePlanType, { bg: string; border: string; text: string }> = {
+  expected:    { bg: '#eaecf3', border: '#2c3e6b', text: '#2c3e6b' },
+  alternative: { bg: '#e8ede6', border: '#3f5b34', text: '#3f5b34' },
+  wildcard:    { bg: '#f4ede6', border: '#8a4f23', text: '#8a4f23' },
+}
+
+const LIFE_LABELS: Record<LifePlanType, string> = {
+  expected: 'Life I', alternative: 'Life II', wildcard: 'Life III',
 }
 
 export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
@@ -32,30 +34,26 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
   const lifePlans = odysseyPlan.life_plans || []
 
   const { nodes, edges } = useMemo(() => {
+    const lifePlans = odysseyPlan.life_plans || []
     const lp = lifePlans.find((l: { type: string }) => l.type === activeType)
     if (!lp) return { nodes: [], edges: [] }
 
-    const colors = typeColors[activeType]
-    const milestones = (lp.milestones || []).sort(
-      (a: { year: number; position: number }, b: { year: number; position: number }) =>
-        a.year !== b.year ? a.year - b.year : a.position - b.position
+    const colors = TYPE_COLORS[activeType]
+    const milestones = [...(lp.milestones || [])].sort(
+      (a, b) => a.year !== b.year ? a.year - b.year : (a.position ?? 0) - (b.position ?? 0)
     )
 
     const LANE_W = 260
     const NODE_H = 80
     const X_OFFSET = 60
 
-    // Group by year
     const byYear: Record<number, typeof milestones> = {}
     for (let y = 1; y <= 5; y++) byYear[y] = []
-    milestones.forEach((m: { year: number }) => {
-      if (byYear[m.year]) byYear[m.year].push(m)
-    })
+    milestones.forEach((m) => { if (byYear[m.year]) byYear[m.year].push(m) })
 
     const nodes: Node[] = []
     const edges: Edge[] = []
 
-    // Year header nodes
     for (let y = 1; y <= 5; y++) {
       nodes.push({
         id: `year-${y}`,
@@ -63,20 +61,21 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
         position: { x: X_OFFSET + (y - 1) * LANE_W, y: 0 },
         data: { label: `Year ${y}` },
         style: {
-          background: '#1c1917',
-          border: `1px solid #44403c`,
-          borderRadius: 12,
-          color: '#a8a29e',
+          background: '#f3f1ea',
+          border: '1px solid #dad5c5',
+          borderRadius: 0,
+          color: '#9a9485',
           fontSize: 12,
-          fontWeight: 700,
+          fontWeight: 600,
           width: 200,
           textAlign: 'center',
+          fontFamily: "'Caveat', cursive",
+          letterSpacing: '0.05em',
         },
       })
     }
 
-    // Milestone nodes
-    milestones.forEach((m: { id: string; year: number; title: string; category: string; description: string }, i: number) => {
+    milestones.forEach((m) => {
       const yearItems = byYear[m.year]
       const posInYear = yearItems.indexOf(m)
       nodes.push({
@@ -97,7 +96,7 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
         style: {
           background: colors.bg,
           border: `1px solid ${colors.border}`,
-          borderRadius: 12,
+          borderRadius: 0,
           color: colors.text,
           fontSize: 12,
           width: 200,
@@ -106,34 +105,31 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
       })
     })
 
-    // Connect milestones in sequence across years
     let prev: string | null = null
     for (let y = 1; y <= 5; y++) {
-      const yearMilestones = byYear[y]
-      if (yearMilestones.length > 0) {
+      const ym = byYear[y]
+      if (ym.length > 0) {
         if (prev) {
           edges.push({
-            id: `e-${prev}-${yearMilestones[0].id}`,
+            id: `e-${prev}-${ym[0].id}`,
             source: prev,
-            target: yearMilestones[0].id,
+            target: ym[0].id,
             style: { stroke: colors.border, strokeWidth: 2 },
             animated: true,
           })
         }
-        // Connect within same year
-        for (let i = 0; i < yearMilestones.length - 1; i++) {
+        for (let i = 0; i < ym.length - 1; i++) {
           edges.push({
-            id: `e-same-${yearMilestones[i].id}-${yearMilestones[i + 1].id}`,
-            source: yearMilestones[i].id,
-            target: yearMilestones[i + 1].id,
+            id: `e-same-${ym[i].id}-${ym[i + 1].id}`,
+            source: ym[i].id,
+            target: ym[i + 1].id,
             style: { stroke: colors.border, strokeWidth: 1.5, strokeDasharray: '4 4' },
           })
         }
-        prev = yearMilestones[yearMilestones.length - 1].id
+        prev = ym[ym.length - 1].id
       }
     }
 
-    // If no milestones, add an empty state node
     if (milestones.length === 0) {
       nodes.push({
         id: 'empty',
@@ -141,10 +137,10 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
         position: { x: 200, y: 120 },
         data: { label: 'No milestones yet — add some in the Wizard tab' },
         style: {
-          background: '#1c1917',
-          border: '1px dashed #44403c',
-          borderRadius: 12,
-          color: '#57534e',
+          background: '#f3f1ea',
+          border: '1px dashed #dad5c5',
+          borderRadius: 0,
+          color: '#9a9485',
           fontSize: 12,
           width: 280,
           textAlign: 'center',
@@ -153,33 +149,41 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
     }
 
     return { nodes, edges }
-  }, [activeType, lifePlans])
+  }, [activeType, odysseyPlan.life_plans])
 
   return (
     <div className="flex flex-col h-full">
       {/* Life selector */}
-      <div className="flex gap-2 p-4 border-b border-stone-800 shrink-0">
+      <div style={{
+        display: 'flex',
+        gap: 8,
+        padding: '12px 16px',
+        borderBottom: '1px solid var(--ql-rule)',
+        background: 'var(--ql-paper-deep)',
+        flexShrink: 0,
+      }}>
         {PLAN_TYPES.map(type => {
-          const meta = LIFE_PLAN_LABELS[type]
           const lp = lifePlans.find((l: { type: string }) => l.type === type)
-          const colorCls = {
-            expected: 'border-indigo-500 text-indigo-300 bg-indigo-950/50',
-            alternative: 'border-emerald-500 text-emerald-300 bg-emerald-950/50',
-            wildcard: 'border-amber-500 text-amber-300 bg-amber-950/50',
-          }
+          const active = activeType === type
+          const color = TYPE_COLORS[type].border
           return (
             <button
               key={type}
               onClick={() => setActiveType(type)}
-              className={cn(
-                'flex-1 py-2 px-3 rounded-xl border text-sm font-medium transition-colors',
-                activeType === type
-                  ? colorCls[type]
-                  : 'border-stone-700 text-stone-500 hover:text-stone-300 hover:border-stone-600'
-              )}
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                border: active ? `1px solid ${color}` : '1px solid var(--ql-rule)',
+                background: active ? TYPE_COLORS[type].bg : 'none',
+                fontSize: 12,
+                color: active ? color : 'var(--ql-ink-faint)',
+                cursor: 'pointer',
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: active ? 500 : 400,
+              }}
             >
-              <div>{meta.label}</div>
-              <div className="text-xs font-normal opacity-70 truncate">
+              <div style={{ fontWeight: 600 }}>{LIFE_LABELS[type]}</div>
+              <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.7, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {lp?.title || 'Untitled'}
               </div>
             </button>
@@ -192,6 +196,7 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
         <ReactFlow
           nodes={nodes}
           edges={edges}
+          style={{ background: '#fbfaf6' }}
           fitView
           fitViewOptions={{ padding: 0.2 }}
           nodesDraggable={false}
@@ -199,15 +204,12 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
           elementsSelectable={false}
           proOptions={{ hideAttribution: true }}
         >
-          <Background color="#292524" variant={BackgroundVariant.Dots} gap={20} />
-          <Controls className="!bg-stone-800 !border-stone-700 !text-stone-300" />
-          <MiniMap
-            nodeColor={(n) => {
-              if (n.id.startsWith('year-')) return '#292524'
-              return typeColors[activeType].border
-            }}
-            className="!bg-stone-900 !border-stone-700"
-          />
+          <Background color="#dad5c5" variant={BackgroundVariant.Dots} gap={20} />
+          <Controls />
+          <MiniMap nodeColor={(n) => {
+            if (n.id.startsWith('year-')) return '#dad5c5'
+            return TYPE_COLORS[activeType].border
+          }} />
         </ReactFlow>
       </div>
     </div>

@@ -27,7 +27,6 @@ export default function CreatePlanButton({ label = 'New odyssey' }: CreatePlanBu
 
     if (error || !plan) { setLoading(false); return }
 
-    // Create the 3 life plan stubs
     await supabase.from('life_plans').insert([
       { odyssey_plan_id: plan.id, type: 'expected' },
       { odyssey_plan_id: plan.id, type: 'alternative' },
@@ -41,10 +40,24 @@ export default function CreatePlanButton({ label = 'New odyssey' }: CreatePlanBu
     <button
       onClick={handleCreate}
       disabled={loading}
-      className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        background: 'none',
+        border: '1px solid var(--ql-ink)',
+        padding: '8px 16px',
+        fontSize: 11,
+        fontWeight: 600,
+        letterSpacing: '0.1em',
+        textTransform: 'uppercase',
+        color: loading ? 'var(--ql-ink-faint)' : 'var(--ql-ink)',
+        cursor: loading ? 'not-allowed' : 'pointer',
+        fontFamily: "'Inter', sans-serif",
+      }}
     >
-      <Plus className="w-4 h-4" />
-      {loading ? 'Creating...' : label}
+      <Plus style={{ width: 13, height: 13 }} />
+      {loading ? 'Creating…' : label}
     </button>
   )
 }

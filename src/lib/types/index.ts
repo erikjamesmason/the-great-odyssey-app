@@ -20,6 +20,7 @@ export interface Milestone {
   title: string
   description: string
   category: MilestoneCategory
+  position?: number
   created_at: string
 }
 
@@ -29,7 +30,10 @@ export interface LifePlan {
   type: LifePlanType
   title: string
   questions: string[]
-  gauges: DashboardGauges
+  gauge_resources: number
+  gauge_likeability: number
+  gauge_confidence: number
+  gauge_coherence: number
   milestones: Milestone[]
   created_at: string
   updated_at: string
@@ -51,7 +55,7 @@ export interface Prototype {
   title: string
   description: string
   status: PrototypeStatus
-  date: string | null
+  scheduled_date: string | null
   notes: string
   created_at: string
   updated_at: string
@@ -61,17 +65,17 @@ export const LIFE_PLAN_LABELS: Record<LifePlanType, { label: string; description
   expected: {
     label: 'Life One',
     description: 'The path you are already on',
-    color: 'indigo',
+    color: 'var(--ql-l1)',
   },
   alternative: {
     label: 'Life Two',
     description: 'What you would do if Life One disappeared',
-    color: 'emerald',
+    color: 'var(--ql-l2)',
   },
   wildcard: {
     label: 'Life Three',
     description: 'If money and image were no obstacle',
-    color: 'amber',
+    color: 'var(--ql-l3)',
   },
 }
 

@@ -4,49 +4,91 @@ import { useState } from 'react'
 import { MILESTONE_CATEGORY_LABELS, type MilestoneCategory } from '@/lib/types'
 import { Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 
+type MilestoneField = 'title' | 'description' | 'category'
+
 interface MilestoneCardProps {
   milestone: { title: string; description: string; category: MilestoneCategory }
-  color: string
-  onUpdate: (field: string, value: string) => void
+  onUpdate: (field: MilestoneField, value: string) => void
   onRemove: () => void
 }
 
-export default function MilestoneCard({ milestone, color, onUpdate, onRemove }: MilestoneCardProps) {
-  const [expanded, setExpanded] = useState(!milestone.title)
+export default function MilestoneCard({ milestone, onUpdate, onRemove }: MilestoneCardProps) {
+  const [expanded, setExpanded] = useState(milestone.title === '')
 
   return (
-    <div className="bg-stone-800/60 border border-stone-700 rounded-xl p-3">
-      <div className="flex items-center gap-2">
+    <div style={{
+      background: 'var(--ql-paper-deep)',
+      border: '1px solid var(--ql-rule)',
+      padding: 12,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <input
           type="text"
           value={milestone.title}
           onChange={e => onUpdate('title', e.target.value)}
           placeholder="Milestone title"
-          className="flex-1 bg-transparent text-sm outline-none placeholder-stone-600"
+          style={{
+            flex: 1,
+            background: 'transparent',
+            border: 'none',
+            fontSize: 13,
+            color: 'var(--ql-ink)',
+            outline: 'none',
+            fontFamily: "'Inter', sans-serif",
+          }}
         />
         <select
           value={milestone.category}
           onChange={e => onUpdate('category', e.target.value)}
-          className="bg-stone-700 text-xs rounded-lg px-2 py-1 outline-none border border-stone-600"
+          style={{
+            background: 'var(--ql-paper)',
+            border: '1px solid var(--ql-rule)',
+            fontSize: 11,
+            padding: '2px 6px',
+            color: 'var(--ql-ink-soft)',
+            outline: 'none',
+            fontFamily: "'Inter', sans-serif",
+            cursor: 'pointer',
+          }}
         >
           {(Object.entries(MILESTONE_CATEGORY_LABELS) as [MilestoneCategory, string][]).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
         </select>
-        <button onClick={() => setExpanded(!expanded)} className="text-stone-500 hover:text-stone-300">
-          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ql-ink-faint)', display: 'flex' }}
+        >
+          {expanded
+            ? <ChevronUp style={{ width: 14, height: 14 }} />
+            : <ChevronDown style={{ width: 14, height: 14 }} />}
         </button>
-        <button onClick={onRemove} className="text-stone-600 hover:text-red-400 transition-colors">
-          <Trash2 className="w-3.5 h-3.5" />
+        <button
+          onClick={onRemove}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ql-ink-faint)', display: 'flex' }}
+        >
+          <Trash2 style={{ width: 13, height: 13 }} />
         </button>
       </div>
       {expanded && (
         <textarea
           value={milestone.description}
           onChange={e => onUpdate('description', e.target.value)}
-          placeholder="Optional notes about this milestone..."
+          placeholder="Optional notes about this milestone…"
           rows={2}
-          className="mt-2 w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-xs text-stone-300 outline-none resize-none focus:border-stone-500 transition-colors placeholder-stone-600"
+          style={{
+            marginTop: 8,
+            width: '100%',
+            background: 'var(--ql-paper)',
+            border: '1px solid var(--ql-rule)',
+            padding: '8px 10px',
+            fontSize: 12,
+            color: 'var(--ql-ink-soft)',
+            outline: 'none',
+            resize: 'none',
+            fontFamily: "'Inter', sans-serif",
+            boxSizing: 'border-box',
+          }}
         />
       )}
     </div>
