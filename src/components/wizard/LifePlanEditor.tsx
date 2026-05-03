@@ -327,35 +327,39 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
           Back
         </button>
         <div style={{ display: 'flex', gap: 12 }}>
-          <button
-            onClick={save}
-            disabled={saving}
-            style={{
-              background: 'none',
-              border: '1px solid var(--ql-rule)',
-              padding: '8px 16px',
-              fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: saving ? 'var(--ql-ink-faint)' : 'var(--ql-ink-soft)',
-              cursor: saving ? 'not-allowed' : 'pointer',
-              fontFamily: "'Inter', sans-serif",
-            }}
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-          {stepIndex < STEPS.length - 1 && (
+          {stepIndex < STEPS.length - 1 ? (
             <button
-              onClick={() => setStep(STEPS[stepIndex + 1])}
+              onClick={async () => { await save(); setStep(STEPS[stepIndex + 1]) }}
+              disabled={saving}
               style={{
                 background: qlColor,
                 border: 'none',
                 padding: '8px 16px',
                 fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
                 color: 'white',
-                cursor: 'pointer',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                opacity: saving ? 0.6 : 1,
                 fontFamily: "'Inter', sans-serif",
               }}
             >
-              Continue
+              {saving ? 'Saving…' : 'Save & Continue'}
+            </button>
+          ) : (
+            <button
+              onClick={save}
+              disabled={saving}
+              style={{
+                background: 'var(--ql-ink)',
+                border: 'none',
+                padding: '8px 16px',
+                fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+                color: 'var(--ql-paper)',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                opacity: saving ? 0.6 : 1,
+                fontFamily: "'Inter', sans-serif",
+              }}
+            >
+              {saving ? 'Saving…' : 'Save'}
             </button>
           )}
         </div>

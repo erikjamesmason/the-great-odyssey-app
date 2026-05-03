@@ -22,8 +22,6 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
   const [activeType, setActiveType] = useState<LifePlanType>('expected')
   const [aiOpen, setAiOpen] = useState(false)
 
-  const activePlan = odysseyPlan.life_plans?.find(lp => lp.type === activeType)
-
   return (
     <div className="flex h-full">
       {/* Main wizard area */}
@@ -65,13 +63,17 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
           })}
         </div>
 
-        {/* Plan editor */}
+        {/* Plan editor — all three mounted; only active is visible to preserve unsaved state */}
         <div className="flex-1 overflow-auto" style={{ padding: 24 }}>
-          {activePlan ? (
-            <LifePlanEditor lifePlan={activePlan} type={activeType} />
-          ) : (
-            <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)' }}>No plan found for this type.</p>
-          )}
+          {PLAN_TYPES.map(type => {
+            const plan = odysseyPlan.life_plans?.find(lp => lp.type === type)
+            if (!plan) return null
+            return (
+              <div key={type} style={{ display: activeType === type ? 'block' : 'none' }}>
+                <LifePlanEditor lifePlan={plan} type={type} />
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -101,10 +103,12 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
               <X style={{ width: 14, height: 14 }} />
             </button>
           </div>
-          {activePlan
-            ? <AiGuide lifePlanId={activePlan.id} lifePlanType={activeType} />
-            : <p style={{ padding: 16, fontSize: 13, color: 'var(--ql-ink-faint)' }}>No plan selected.</p>
-          }
+          {(() => {
+            const plan = odysseyPlan.life_plans?.find(lp => lp.type === activeType)
+            return plan
+              ? <AiGuide lifePlanId={plan.id} lifePlanType={activeType} />
+              : <p style={{ padding: 16, fontSize: 13, color: 'var(--ql-ink-faint)' }}>No plan selected.</p>
+          })()}
         </div>
       ) : (
         <button
