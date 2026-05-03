@@ -1,6 +1,6 @@
 'use client'
 
-import { LIFE_PLAN_LABELS, MILESTONE_CATEGORY_LABELS, type LifePlanType, type MilestoneCategory } from '@/lib/types'
+import { MILESTONE_CATEGORY_LABELS, type LifePlanType, type MilestoneCategory, type Milestone } from '@/lib/types'
 
 interface TimelineViewProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,7 +74,7 @@ export default function TimelineView({ odysseyPlan }: TimelineViewProps) {
             const lp = lifePlans.find((l: { type: string }) => l.type === type)
             const m = LIFE_META[type]
             const yearMilestones = (lp?.milestones || []).filter(
-              (ms: { year: number }) => ms.year === year
+              (ms: Milestone) => ms.year === year
             )
             return (
               <div key={type} style={{
@@ -86,7 +86,7 @@ export default function TimelineView({ odysseyPlan }: TimelineViewProps) {
                 {yearMilestones.length === 0 ? (
                   <p style={{ fontSize: 11, color: 'var(--ql-ink-faint)', fontStyle: 'italic', margin: 0 }}>—</p>
                 ) : (
-                  yearMilestones.map((ms: { id: string; title: string; category: MilestoneCategory; description: string }) => (
+                  yearMilestones.map((ms: Milestone) => (
                     <div key={ms.id} style={{ marginBottom: 8 }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                         <div style={{ width: 6, height: 6, background: m.color, flexShrink: 0, marginTop: 6 }} />
