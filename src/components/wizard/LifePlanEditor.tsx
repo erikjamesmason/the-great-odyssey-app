@@ -88,7 +88,7 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
             year: m.year, title: m.title, description: m.description, category: m.category, position: i,
           }).eq('id', m.id)
           if (updateError) throw new Error(`milestone update: ${updateError.message}`)
-        } else if (m.title.trim()) {
+        } else {
           const { data: inserted, error: insertError } = await supabase
             .from('milestones')
             .insert({
