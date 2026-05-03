@@ -30,10 +30,10 @@ src/
     (auth)/login/       — login page
     (auth)/signup/      — signup page
     (app)/              — authenticated shell
-      page.tsx          — dashboard (frontispiece layout)
+      dashboard/        — dashboard (frontispiece layout)
       plans/[id]/       — plan workspace (wizard, timeline, roadmap, prototype, AI)
   components/
-    nav/                — AppNav (sidebar), PlanTabNav (plan-level tabs)
+    ui/                 — AppNav (sidebar), PlanTabNav (plan-level tabs), CreatePlanButton
     wizard/             — WizardShell, LifePlanEditor, DashboardGauges, MilestoneCard
     timeline/           — TimelineView
     roadmap/            — RoadmapView
@@ -48,7 +48,9 @@ src/
 
 **All visual styling must use inline `style={{}}` with CSS variables. No Tailwind color, shape, or shadow classes.**
 
-Tailwind is permitted only for layout: `flex`, `h-full`, `flex-col`, `flex-1`, `overflow-auto`, `hidden`, `sm:inline`, etc.
+Tailwind is permitted for layout and responsive behavior: `flex`, `h-full`, `flex-col`, `flex-1`, `overflow-auto`, `hidden`, `sm:inline`, `sm:hidden`, `fixed sm:static`, `grid grid-cols-1 sm:grid-cols-3`, etc.
+
+**Responsive rule:** Use Tailwind `sm:` classes for structural/positional breakpoint changes. Keep all QL visual values (`color`, `border`, `background`, `fontSize`, `padding` for brand-defined spacing) in `style={{}}`. Never set `display` in `style={{}}` on an element that also uses Tailwind `hidden`/`flex` — let the class own it.
 
 ### CSS Variables (defined in `globals.css`)
 
@@ -137,6 +139,23 @@ Never use array index as key for lists that can be reordered or deleted. Use:
 ### Always-mounted panels
 
 When two panels share a tab toggle, render both with `display: 'none'` / `display: 'flex'` rather than conditional rendering. Conditional rendering unmounts and destroys form state.
+
+### Responsive panels (dual-render pattern)
+
+When a panel needs fundamentally different layout at a breakpoint (e.g. side panel → full-screen overlay), render two versions:
+
+```tsx
+{/* desktop */}
+{open && <div className="hidden sm:flex" style={{ width: 384, flexDirection: 'column', ... }}>...</div>}
+{/* mobile */}
+{open && <div className="flex sm:hidden" style={{ position: 'fixed', inset: 0, zIndex: 50, flexDirection: 'column', ... }}>...</div>}
+```
+
+Do NOT use `useMediaQuery` — it causes SSR hydration flicker. Do NOT set `display` in `style={{}}` on either div.
+
+### Mobile nav drawer
+
+`AppNav` manages its own `navOpen` state. On mobile: `position: fixed`, slides in via `transition-transform`. On desktop: `sm:static`, normal sidebar. The layout server component (`src/app/(app)/layout.tsx`) needs `pt-12 sm:pt-0` on `<main>` to clear the fixed hamburger button.
 
 ### Supabase error handling
 
