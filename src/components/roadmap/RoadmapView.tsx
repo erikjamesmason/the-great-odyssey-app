@@ -11,7 +11,7 @@ import {
   BackgroundVariant,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { LIFE_PLAN_LABELS, type LifePlanType } from '@/lib/types'
+import { type LifePlanType } from '@/lib/types'
 
 interface RoadmapViewProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,7 +39,7 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
     if (!lp) return { nodes: [], edges: [] }
 
     const colors = TYPE_COLORS[activeType]
-    const milestones = (lp.milestones || []).sort(
+    const milestones = [...(lp.milestones || [])].sort(
       (a: { year: number; position: number }, b: { year: number; position: number }) =>
         a.year !== b.year ? a.year - b.year : a.position - b.position
     )
