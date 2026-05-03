@@ -61,7 +61,6 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
 
       // verify session is active before any writes
       const { data: { user } } = await supabase.auth.getUser()
-      console.log('[save] user:', user?.id, '| life_plan_id:', lifePlan.id)
       if (!user) throw new Error('not authenticated — session missing in browser client')
 
       const { error: lpError } = await supabase.from('life_plans').update({
@@ -72,7 +71,6 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
         gauge_confidence: gauges.confidence,
         gauge_coherence: gauges.coherence,
       }).eq('id', lifePlan.id)
-      console.log('[save] life_plans update error:', lpError)
       if (lpError) throw new Error(`life_plans update: ${lpError.message}`)
 
       if (deletedIds.length) {
@@ -97,7 +95,6 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
             })
             .select('id')
             .single()
-          console.log('[save] milestone insert:', { title: m.title, inserted, insertError })
           if (insertError) throw new Error(`milestone insert: ${insertError.message}`)
           if (inserted) updatedMilestones[i] = { ...m, id: inserted.id }
         }
@@ -105,10 +102,8 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
 
       setMilestones(updatedMilestones)
       setDeletedIds([])
-      console.log('[save] done — milestones:', updatedMilestones.map(m => ({ id: m.id, title: m.title })))
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Save failed'
-      console.error('[save] error:', err)
       setSaveError(msg)
       throw err
     } finally {
