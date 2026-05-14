@@ -11,7 +11,7 @@ import {
   BackgroundVariant,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { type LifePlanType, type OdysseyPlan } from '@/lib/types'
+import { type LifePlanType, type OdysseyPlan, type Milestone } from '@/lib/types'
 
 interface RoadmapViewProps {
   odysseyPlan: OdysseyPlan
@@ -33,13 +33,13 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
   const [activeType, setActiveType] = useState<LifePlanType>('expected')
   const lifePlans = odysseyPlan.life_plans || []
 
-  const { nodes, edges } = useMemo(() => {
+  const { nodes, edges, milestones, byYear } = useMemo(() => {
     const lifePlans = odysseyPlan.life_plans || []
     const lp = lifePlans.find((l: { type: string }) => l.type === activeType)
-    if (!lp) return { nodes: [], edges: [] }
+    if (!lp) return { nodes: [], edges: [], milestones: [] as Milestone[], byYear: {} as Record<number, Milestone[]> }
 
     const colors = TYPE_COLORS[activeType]
-    const milestones = [...(lp.milestones || [])].sort(
+    const milestones: Milestone[] = [...(lp.milestones || [])].sort(
       (a, b) => a.year !== b.year ? a.year - b.year : (a.position ?? 0) - (b.position ?? 0)
     )
 
@@ -47,7 +47,7 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
     const NODE_H = 80
     const X_OFFSET = 60
 
-    const byYear: Record<number, typeof milestones> = {}
+    const byYear: Record<number, Milestone[]> = {}
     for (let y = 1; y <= 5; y++) byYear[y] = []
     milestones.forEach((m) => { if (byYear[m.year]) byYear[m.year].push(m) })
 
@@ -148,7 +148,7 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
       })
     }
 
-    return { nodes, edges }
+    return { nodes, edges, milestones, byYear }
   }, [activeType, odysseyPlan.life_plans])
 
   return (
@@ -191,8 +191,8 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
         })}
       </div>
 
-      {/* Flow canvas */}
-      <div className="flex-1">
+      {/* Desktop: ReactFlow canvas */}
+      <div className="hidden sm:flex flex-1">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -211,6 +211,63 @@ export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
             return TYPE_COLORS[activeType].border
           }} />
         </ReactFlow>
+      </div>
+
+      {/* Mobile: card list grouped by year */}
+      <div className="flex sm:hidden flex-col flex-1 overflow-auto" style={{ padding: 16, gap: 24, display: 'flex' }}>
+        {milestones.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '64px 20px',
+            border: '1px dashed var(--ql-rule)',
+            color: 'var(--ql-ink-faint)',
+            fontSize: 13,
+          }}>
+            No milestones yet — add some in the Wizard tab
+          </div>
+        ) : (
+          [1, 2, 3, 4, 5].map(y => {
+            const ym = byYear[y]
+            if (!ym || ym.length === 0) return null
+            const color = TYPE_COLORS[activeType].border
+            return (
+              <div key={y} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{
+                  fontSize: 13,
+                  fontFamily: "'Caveat', cursive",
+                  color: 'var(--ql-ink-faint)',
+                  letterSpacing: '0.05em',
+                  borderBottom: '1px solid var(--ql-rule)',
+                  paddingBottom: 4,
+                }}>
+                  Year {y}
+                </div>
+                {ym.map(m => (
+                  <div key={m.id} style={{
+                    background: TYPE_COLORS[activeType].bg,
+                    border: `1px solid ${color}`,
+                    padding: '10px 12px',
+                  }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: TYPE_COLORS[activeType].text, marginBottom: 4 }}>
+                      {m.title}
+                    </div>
+                    <div style={{
+                      fontSize: 10, fontWeight: 600, letterSpacing: '0.08em',
+                      textTransform: 'uppercase', color, opacity: 0.7,
+                    }}>
+                      {m.category}
+                    </div>
+                    {m.description && (
+                      <div style={{ fontSize: 12, color: 'var(--ql-ink-soft)', marginTop: 4, lineHeight: 1.5 }}>
+                        {m.description}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )
+          })
+        )}
       </div>
     </div>
   )
