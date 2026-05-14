@@ -84,7 +84,7 @@ export default function PrototypeView({ odysseyPlan, initialPrototypes }: Protot
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 720, margin: '0 auto' }}>
+    <div className="px-4 py-6 sm:px-6" style={{ maxWidth: 720, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 }}>
         <div>
           <h2 style={{ fontSize: 20, fontWeight: 400, color: 'var(--ql-ink)', margin: '0 0 4px' }}>Prototyping</h2>
@@ -121,7 +121,7 @@ export default function PrototypeView({ odysseyPlan, initialPrototypes }: Protot
         }}>
           <h3 style={{ fontSize: 12, fontWeight: 600, margin: 0, color: 'var(--ql-ink)' }}>New prototype</h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)', marginBottom: 6 }}>
                 Life path
@@ -173,7 +173,7 @@ export default function PrototypeView({ odysseyPlan, initialPrototypes }: Protot
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)', marginBottom: 6 }}>
                 Status
