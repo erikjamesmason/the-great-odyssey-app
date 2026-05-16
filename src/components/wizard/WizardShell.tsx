@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { LIFE_PLAN_LABELS, type LifePlanType, type OdysseyPlan } from '@/lib/types'
+import { useSearchParams } from 'next/navigation'
+import { type LifePlanType, type OdysseyPlan } from '@/lib/types'
 import LifePlanEditor from './LifePlanEditor'
 import AiGuide from '../ai-guide/AiGuide'
 import { MessageCircle, X } from 'lucide-react'
@@ -12,69 +13,24 @@ interface WizardShellProps {
 
 const PLAN_TYPES: LifePlanType[] = ['expected', 'alternative', 'wildcard']
 
-const QL_COLORS: Record<LifePlanType, string> = {
-  expected: 'var(--ql-l1)',
-  alternative: 'var(--ql-l2)',
-  wildcard: 'var(--ql-l3)',
-}
-
 export default function WizardShell({ odysseyPlan }: WizardShellProps) {
-  const [activeType, setActiveType] = useState<LifePlanType>('expected')
+  const searchParams = useSearchParams()
+  const activeType = (searchParams.get('life') ?? 'expected') as LifePlanType
   const [aiOpen, setAiOpen] = useState(false)
 
   return (
     <div className="flex h-full">
-      {/* Main wizard area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Life selector tabs */}
-        <div style={{
-          display: 'flex',
-          borderBottom: '1px solid var(--ql-rule)',
-          padding: '0 24px',
-          paddingTop: 0,
-          gap: 0,
-        }}>
-          {PLAN_TYPES.map(type => {
-            const meta = LIFE_PLAN_LABELS[type]
-            const color = QL_COLORS[type]
-            const active = activeType === type
-            return (
-              <button
-                key={type}
-                onClick={() => setActiveType(type)}
-                style={{
-                  padding: '14px 20px',
-                  fontSize: 12,
-                  fontWeight: active ? 500 : 400,
-                  background: 'none',
-                  border: 'none',
-                  borderBottom: active ? `2px solid ${color}` : '2px solid transparent',
-                  color: active ? 'var(--ql-ink)' : 'var(--ql-ink-faint)',
-                  cursor: 'pointer',
-                  fontFamily: "'Inter', sans-serif",
-                }}
-              >
-                <span style={{ fontWeight: 600 }}>{meta.label}</span>
-                <span className="hidden sm:inline" style={{ fontSize: 11, marginLeft: 8, opacity: 0.6 }}>
-                  — {meta.description}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Plan editor — all three mounted; only active is visible to preserve unsaved state */}
-        <div className="flex-1 overflow-auto" style={{ padding: 24 }}>
-          {PLAN_TYPES.map(type => {
-            const plan = odysseyPlan.life_plans?.find(lp => lp.type === type)
-            if (!plan) return null
-            return (
-              <div key={type} style={{ display: activeType === type ? 'block' : 'none' }}>
-                <LifePlanEditor lifePlan={plan} type={type} />
-              </div>
-            )
-          })}
-        </div>
+      {/* Main editor area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-auto">
+        {PLAN_TYPES.map(type => {
+          const plan = odysseyPlan.life_plans?.find(lp => lp.type === type)
+          if (!plan) return null
+          return (
+            <div key={type} style={{ display: activeType === type ? 'block' : 'none' }}>
+              <LifePlanEditor lifePlan={plan} type={type} />
+            </div>
+          )
+        })}
       </div>
 
       {/* AI guide — desktop: 384px flex child (sm+) */}
@@ -96,7 +52,10 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
             padding: '12px 16px',
             borderBottom: '1px solid var(--ql-rule)',
           }}>
-            <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--ql-ink)' }}>AI Guide</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontFamily: "'Caveat', cursive", fontSize: 18, color: 'var(--ql-ink)' }}>the guide</span>
+              <span style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)', fontFamily: "'Inter', sans-serif" }}>AI</span>
+            </div>
             <button
               onClick={() => setAiOpen(false)}
               aria-label="Close AI Guide"
@@ -134,7 +93,10 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
             borderBottom: '1px solid var(--ql-rule)',
             flexShrink: 0,
           }}>
-            <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--ql-ink)' }}>AI Guide</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontFamily: "'Caveat', cursive", fontSize: 18, color: 'var(--ql-ink)' }}>the guide</span>
+              <span style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)', fontFamily: "'Inter', sans-serif" }}>AI</span>
+            </div>
             <button
               onClick={() => setAiOpen(false)}
               aria-label="Close AI Guide"
@@ -158,7 +120,7 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
           onClick={() => setAiOpen(true)}
           style={{
             position: 'fixed',
-            bottom: 24,
+            bottom: 80,
             right: 24,
             background: 'var(--ql-ink)',
             color: 'var(--ql-paper)',
@@ -175,7 +137,7 @@ export default function WizardShell({ odysseyPlan }: WizardShellProps) {
           }}
         >
           <MessageCircle style={{ width: 15, height: 15 }} />
-          AI Guide
+          the guide
         </button>
       )}
     </div>
