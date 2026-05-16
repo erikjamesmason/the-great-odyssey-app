@@ -1,5 +1,5 @@
 create table plan_reflections (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   odyssey_plan_id uuid references odyssey_plans(id) on delete cascade not null,
   user_id uuid references auth.users(id) on delete cascade not null,
   text text not null,
