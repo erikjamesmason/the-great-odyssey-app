@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import PlanTabNav from '@/components/ui/PlanTabNav'
+import PlanGuideShell from '@/components/ui/PlanGuideShell'
 
 interface PlanLayoutProps {
   children: React.ReactNode
@@ -15,19 +16,21 @@ export default async function PlanLayout({ children, params }: PlanLayoutProps) 
 
   const { data: plan } = await supabase
     .from('odyssey_plans')
-    .select('id, name')
+    .select('id, name, life_plans(id, type)')
     .eq('id', id)
     .eq('user_id', user.id)
     .single()
 
   if (!plan) notFound()
 
+  const lifePlans = (plan.life_plans ?? []) as { id: string; type: string }[]
+
   return (
     <div className="flex h-full">
       <PlanTabNav planId={id} planName={plan.name} />
-      <div className="flex-1 overflow-auto pb-16 sm:pb-0">
+      <PlanGuideShell lifePlans={lifePlans}>
         {children}
-      </div>
+      </PlanGuideShell>
     </div>
   )
 }
