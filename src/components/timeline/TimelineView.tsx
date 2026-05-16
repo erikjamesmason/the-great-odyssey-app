@@ -11,7 +11,7 @@ interface TimelineViewProps {
 const PLAN_TYPES: LifePlanType[] = ['expected', 'alternative', 'wildcard']
 const ROMAN_YEARS = ['I', 'II', 'III', 'IV', 'V']
 
-function MilestoneRow({ ms, color }: { ms: Milestone; color: string }) {
+function MilestoneRow({ ms }: { ms: Milestone }) {
   return (
     <div style={{ padding: '6px 0', borderBottom: '1px solid var(--ql-rule)' }}>
       <span style={{
@@ -91,7 +91,6 @@ export default function TimelineView({ odysseyPlan }: TimelineViewProps) {
 
             {PLAN_TYPES.map(type => {
               const lp = lifePlans.find((l: { type: string }) => l.type === type)
-              const color = QL_COLORS[type]
               const yearMilestones = (lp?.milestones || []).filter((ms: Milestone) => ms.year === year)
               return (
                 <div key={type} style={{
@@ -102,7 +101,7 @@ export default function TimelineView({ odysseyPlan }: TimelineViewProps) {
                 }}>
                   {yearMilestones.length === 0
                     ? <span style={{ fontSize: 11, color: 'var(--ql-ink-faint)', fontStyle: 'italic' }}>—</span>
-                    : yearMilestones.map((ms: Milestone) => <MilestoneRow key={ms.id} ms={ms} color={color} />)
+                    : yearMilestones.map((ms: Milestone) => <MilestoneRow key={ms.id} ms={ms} />)
                   }
                 </div>
               )
@@ -209,7 +208,7 @@ export default function TimelineView({ odysseyPlan }: TimelineViewProps) {
                     <div style={{ flex: 1, borderLeft: '1px solid var(--ql-rule)', paddingLeft: 12 }}>
                       {yearMilestones.length === 0
                         ? <span style={{ fontSize: 11, color: 'var(--ql-ink-faint)', fontStyle: 'italic' }}>—</span>
-                        : yearMilestones.map((ms: Milestone) => <MilestoneRow key={ms.id} ms={ms} color={color} />)
+                        : yearMilestones.map((ms: Milestone) => <MilestoneRow key={ms.id} ms={ms} />)
                       }
                     </div>
                   </div>

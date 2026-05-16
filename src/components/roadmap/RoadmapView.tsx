@@ -1,6 +1,6 @@
 'use client'
 
-import { QL_COLORS, LIFE_NUMERALS, LIFE_SEAL_IDS, HAND_LABELS, MILESTONE_CATEGORY_LABELS, type LifePlanType, type OdysseyPlan, type Milestone } from '@/lib/types'
+import { QL_COLORS, LIFE_NUMERALS, LIFE_SEAL_IDS, MILESTONE_CATEGORY_LABELS, type LifePlanType, type OdysseyPlan, type Milestone } from '@/lib/types'
 import { QLSeal, QLOrnament } from '@/components/ui/QLComponents'
 
 interface RoadmapViewProps {
