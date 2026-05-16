@@ -80,12 +80,44 @@ export const LIFE_PLAN_LABELS: Record<LifePlanType, { label: string; description
 }
 
 export const MILESTONE_CATEGORY_LABELS: Record<MilestoneCategory, string> = {
-  career: 'Career',
-  personal: 'Personal',
-  education: 'Education',
-  travel: 'Travel',
-  relationship: 'Relationships',
-  health: 'Health',
-  finance: 'Finance',
-  other: 'Other',
+  career: 'career',
+  personal: 'personal',
+  education: 'learning',
+  travel: 'travel',
+  relationship: 'people',
+  health: 'body',
+  finance: 'money',
+  other: 'other',
+}
+
+export interface Reflection {
+  id: string
+  odyssey_plan_id: string
+  user_id: string
+  text: string
+  created_at: string
+}
+
+export const HAND_LABELS: Record<LifePlanType, string> = {
+  expected: "the path I'm on",
+  alternative: 'if it disappeared',
+  wildcard: 'no obstacle',
+}
+
+export const LIFE_NUMERALS: Record<LifePlanType, string> = {
+  expected: 'I',
+  alternative: 'II',
+  wildcard: 'III',
+}
+
+export const LIFE_SEAL_IDS: Record<LifePlanType, 'L1' | 'L2' | 'L3'> = {
+  expected: 'L1',
+  alternative: 'L2',
+  wildcard: 'L3',
+}
+
+export const QL_COLORS: Record<LifePlanType, string> = {
+  expected: 'var(--ql-l1)',
+  alternative: 'var(--ql-l2)',
+  wildcard: 'var(--ql-l3)',
 }

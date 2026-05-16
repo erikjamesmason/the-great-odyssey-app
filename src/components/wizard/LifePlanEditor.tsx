@@ -2,37 +2,20 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { LIFE_PLAN_LABELS, type LifePlan, type LifePlanType, type MilestoneCategory } from '@/lib/types'
+import { HAND_LABELS, LIFE_NUMERALS, LIFE_SEAL_IDS, QL_COLORS, type LifePlan, type LifePlanType, type MilestoneCategory } from '@/lib/types'
 import { Plus, Trash2 } from 'lucide-react'
 import DashboardGauges from './DashboardGauges'
 import MilestoneCard from './MilestoneCard'
+import { QLSeal, QLOrnament, QLMarginQuote } from '@/components/ui/QLComponents'
 
 interface LifePlanEditorProps {
   lifePlan: LifePlan
   type: LifePlanType
 }
 
-const STEPS = ['title', 'questions', 'milestones', 'gauges'] as const
-type Step = typeof STEPS[number]
-
-const stepLabels: Record<Step, string> = {
-  title: '1. Title',
-  questions: '2. Questions',
-  milestones: '3. Timeline',
-  gauges: '4. Dashboard',
-}
-
-const QL_COLORS: Record<LifePlanType, string> = {
-  expected: 'var(--ql-l1)',
-  alternative: 'var(--ql-l2)',
-  wildcard: 'var(--ql-l3)',
-}
-
 export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) {
-  const meta = LIFE_PLAN_LABELS[type]
   const qlColor = QL_COLORS[type]
 
-  const [step, setStep] = useState<Step>('title')
   const [title, setTitle] = useState(lifePlan.title || '')
   const initialQuestions = (lifePlan.questions?.length ? lifePlan.questions : ['', '']) as string[]
   const [questions, setQuestions] = useState<{ key: number; text: string }[]>(
@@ -50,6 +33,7 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
   })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [savedAt, setSavedAt] = useState<string | null>(null)
   const [deletedIds, setDeletedIds] = useState<string[]>([])
   const clientKeyRef = useRef(0)
 
@@ -59,7 +43,6 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
     try {
       const supabase = createClient()
 
-      // verify session is active before any writes
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('not authenticated — session missing in browser client')
 
@@ -102,6 +85,7 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
 
       setMilestones(updatedMilestones)
       setDeletedIds([])
+      setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Save failed'
       setSaveError(msg)
@@ -143,270 +127,249 @@ export default function LifePlanEditor({ lifePlan, type }: LifePlanEditorProps) 
     setMilestones(milestones.filter((_, i) => i !== idx))
   }
 
-  const stepIndex = STEPS.indexOf(step)
+  const ROMAN_YEARS = ['I', 'II', 'III', 'IV', 'V']
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto' }}>
-      {/* Save error banner */}
+    <div style={{
+      maxWidth: 600,
+      margin: '0 auto',
+      padding: '32px 24px 64px',
+      fontFamily: "'Inter', sans-serif",
+    }}>
+      {/* QL header: seal + numeral + hand label */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginBottom: 28 }}>
+        <QLSeal id={LIFE_SEAL_IDS[type]} size={56} color={qlColor} />
+        <div>
+          <div style={{
+            fontFamily: "'Caveat', cursive",
+            fontSize: 32,
+            color: qlColor,
+            lineHeight: 1,
+          }}>
+            {LIFE_NUMERALS[type]}
+          </div>
+          <div style={{
+            fontSize: 12,
+            fontStyle: 'italic',
+            color: 'var(--ql-ink-faint)',
+            marginTop: 4,
+          }}>
+            {HAND_LABELS[type]}
+          </div>
+        </div>
+      </div>
+
+      {/* title input — borderless, large */}
+      <input
+        type="text"
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+        placeholder="Name this life"
+        style={{
+          width: '100%',
+          background: 'none',
+          border: 'none',
+          borderBottom: '1px solid var(--ql-rule)',
+          padding: '6px 0',
+          fontSize: 20,
+          color: 'var(--ql-ink)',
+          fontFamily: "'Inter', sans-serif",
+          outline: 'none',
+          marginBottom: 32,
+          boxSizing: 'border-box',
+        }}
+      />
+
+      {/* error banner */}
       {saveError && (
         <div style={{
           background: '#fef2f2',
           border: '1px solid #fca5a5',
           padding: '10px 14px',
-          marginBottom: 16,
+          marginBottom: 20,
           fontSize: 12,
           color: '#b91c1c',
-          fontFamily: "'Inter', sans-serif",
         }}>
-          Save error: {saveError}
+          {saveError}
         </div>
       )}
 
-      {/* Step navigation */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 32 }}>
-        {STEPS.map((s, i) => (
+      {/* Questions */}
+      <section style={{ marginBottom: 40 }}>
+        <div style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: 'var(--ql-ink-faint)',
+          marginBottom: 12,
+        }}>
+          Questions
+        </div>
+
+        {questions.map(q => (
+          <QLMarginQuote key={q.key}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+              <textarea
+                value={q.text}
+                onChange={e => updateQuestion(q.key, e.target.value)}
+                placeholder="What would living this life answer for you?"
+                rows={2}
+                style={{
+                  flex: 1,
+                  background: 'none',
+                  border: 'none',
+                  outline: 'none',
+                  resize: 'vertical',
+                  fontSize: 13,
+                  fontStyle: 'italic',
+                  color: 'var(--ql-ink-soft)',
+                  fontFamily: "'Inter', sans-serif",
+                  padding: 0,
+                  lineHeight: 1.5,
+                }}
+              />
+              {questions.length > 1 && (
+                <button
+                  onClick={() => removeQuestion(q.key)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ql-ink-faint)', display: 'flex', flexShrink: 0, marginTop: 2 }}
+                >
+                  <Trash2 style={{ width: 12, height: 12 }} />
+                </button>
+              )}
+            </div>
+          </QLMarginQuote>
+        ))}
+
+        {questions.length < 3 && (
           <button
-            key={s}
-            onClick={async () => {
-              if (s !== step) await save().catch(() => {})
-              setStep(s)
-            }}
+            onClick={addQuestion}
             style={{
-              flex: 1,
-              padding: '8px 4px',
-              fontSize: 11,
-              background: 'none',
-              border: 'none',
-              borderBottom: step === s ? `2px solid ${qlColor}` : '2px solid var(--ql-rule)',
-              color: step === s ? 'var(--ql-ink)' : i < stepIndex ? 'var(--ql-ink-soft)' : 'var(--ql-ink-faint)',
-              cursor: 'pointer',
-              fontWeight: step === s ? 500 : 400,
+              display: 'flex', alignItems: 'center', gap: 6,
+              fontSize: 11, color: 'var(--ql-ink-faint)',
+              background: 'none', border: 'none', cursor: 'pointer',
               fontFamily: "'Inter', sans-serif",
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
+              marginTop: 4,
             }}
           >
-            {stepLabels[s]}
+            <Plus style={{ width: 11, height: 11 }} />
+            Add question
           </button>
-        ))}
-      </div>
+        )}
+      </section>
 
-      {/* Step: Title */}
-      {step === 'title' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div>
-            <h2 style={{ fontSize: 18, fontWeight: 400, color: 'var(--ql-ink)', margin: '0 0 6px' }}>
-              {meta.label}: Give it a name
-            </h2>
-            <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)', margin: 0 }}>
-              A short, evocative title — 3 to 6 words. What is the headline of this life?
-            </p>
-          </div>
-          <input
-            type="text"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder={`e.g. "Running My Own Firm" or "Living in the Wild"`}
-            className="ql-input"
-            style={{ fontSize: 18 }}
-          />
-          <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', margin: 0 }}>
-            <span style={{ color: qlColor, fontWeight: 600 }}>{meta.label}</span> — {meta.description}
-          </p>
+      <QLOrnament />
+
+      {/* Milestones */}
+      <section style={{ marginTop: 32, marginBottom: 40 }}>
+        <div style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: 'var(--ql-ink-faint)',
+          marginBottom: 20,
+        }}>
+          Five-year timeline
         </div>
-      )}
 
-      {/* Step: Questions */}
-      {step === 'questions' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div>
-            <h2 style={{ fontSize: 18, fontWeight: 400, color: 'var(--ql-ink)', margin: '0 0 6px' }}>
-              Questions this life answers
-            </h2>
-            <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)', margin: 0 }}>
-              What curiosities or uncertainties would living this life resolve? (2–3 questions)
-            </p>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {questions.map(q => (
-              <div key={q.key} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <input
-                  type="text"
-                  value={q.text}
-                  onChange={e => updateQuestion(q.key, e.target.value)}
-                  placeholder={`e.g. "Can I really make a living doing what I love?"`}
-                  className="ql-input"
-                />
-                {questions.length > 1 && (
-                  <button
-                    onClick={() => removeQuestion(q.key)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ql-ink-faint)', display: 'flex', flexShrink: 0 }}
-                  >
-                    <Trash2 style={{ width: 14, height: 14 }} />
-                  </button>
-                )}
+        {[1, 2, 3, 4, 5].map(year => {
+          const yearMilestones = milestones
+            .map((m, idx) => ({ ...m, idx }))
+            .filter(m => m.year === year)
+          return (
+            <div key={year} style={{ marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                <span style={{
+                  fontFamily: "'Caveat', cursive",
+                  fontSize: 20,
+                  color: qlColor,
+                  minWidth: 20,
+                }}>
+                  {ROMAN_YEARS[year - 1]}
+                </span>
+                <div style={{ flex: 1, height: 1, background: 'var(--ql-rule)' }} />
+                <button
+                  onClick={() => addMilestone(year)}
+                  style={{
+                    fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase',
+                    color: 'var(--ql-ink-faint)',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    fontFamily: "'Inter', sans-serif",
+                  }}
+                >
+                  <Plus style={{ width: 11, height: 11 }} />
+                  Add
+                </button>
               </div>
-            ))}
-          </div>
-          {questions.length < 3 && (
-            <button
-              onClick={addQuestion}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                fontSize: 12, color: 'var(--ql-ink-soft)',
-                background: 'none', border: 'none', cursor: 'pointer',
-                fontFamily: "'Inter', sans-serif",
-              }}
-            >
-              <Plus style={{ width: 13, height: 13 }} />
-              Add another question
-            </button>
-          )}
-        </div>
-      )}
 
-      {/* Step: Milestones */}
-      {step === 'milestones' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div>
-            <h2 style={{ fontSize: 18, fontWeight: 400, color: 'var(--ql-ink)', margin: '0 0 6px' }}>
-              Five-year timeline
-            </h2>
-            <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)', margin: 0 }}>
-              Map out key milestones across each year. Think: career moves, experiences, skills, relationships, geography.
-            </p>
-          </div>
-          {[1, 2, 3, 4, 5].map(year => {
-            const yearMilestones = milestones
-              .map((m, idx) => ({ ...m, idx }))
-              .filter(m => m.year === year)
-            return (
-              <div key={year}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                  <div style={{
-                    fontSize: 12,
-                    fontFamily: "'Caveat', cursive",
-                    color: qlColor,
-                    border: `1px solid ${qlColor}`,
-                    padding: '2px 10px',
-                  }}>
-                    Year {year}
-                  </div>
-                  <div style={{ flex: 1, height: 1, background: 'var(--ql-rule)' }} />
-                  <button
-                    onClick={() => addMilestone(year)}
-                    style={{
-                      fontSize: 11, color: 'var(--ql-ink-faint)',
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: 4,
-                      fontFamily: "'Inter', sans-serif",
-                    }}
-                  >
-                    <Plus style={{ width: 12, height: 12 }} />
-                    Add
-                  </button>
-                </div>
-                {yearMilestones.length === 0 && (
-                  <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', fontStyle: 'italic', marginLeft: 8, marginBottom: 8 }}>
-                    No milestones yet — click Add to start.
-                  </p>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 8 }}>
-                  {yearMilestones.map(m => (
-                    <MilestoneCard
-                      key={m.id ?? `new-${m._clientKey}`}
-                      milestone={m}
-                      onUpdate={(field, val) => updateMilestone(m.idx, field, val)}
-                      onRemove={() => removeMilestone(m.idx)}
-                    />
-                  ))}
-                </div>
+              {yearMilestones.length === 0 && (
+                <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', fontStyle: 'italic', marginLeft: 28, marginBottom: 0 }}>
+                  Nothing yet.
+                </p>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 28 }}>
+                {yearMilestones.map(m => (
+                  <MilestoneCard
+                    key={m.id ?? `new-${m._clientKey}`}
+                    milestone={m}
+                    onUpdate={(field, val) => updateMilestone(m.idx, field, val)}
+                    onRemove={() => removeMilestone(m.idx)}
+                  />
+                ))}
               </div>
-            )
-          })}
-        </div>
-      )}
+            </div>
+          )
+        })}
+      </section>
 
-      {/* Step: Gauges */}
-      {step === 'gauges' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div>
-            <h2 style={{ fontSize: 18, fontWeight: 400, color: 'var(--ql-ink)', margin: '0 0 6px' }}>
-              Dashboard
-            </h2>
-            <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)', margin: 0 }}>
-              Rate this life plan honestly across four dimensions.
-            </p>
-          </div>
-          <DashboardGauges gauges={gauges} color={qlColor} onChange={setGauges} />
-        </div>
-      )}
+      <QLOrnament />
 
-      {/* Footer */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: 32,
-        paddingTop: 24,
-        borderTop: '1px solid var(--ql-rule)',
-      }}>
+      {/* Gauges */}
+      <section style={{ marginTop: 32, marginBottom: 40 }}>
+        <div style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: 'var(--ql-ink-faint)',
+          marginBottom: 4,
+        }}>
+          Dashboard
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', fontStyle: 'italic', marginBottom: 20 }}>
+          Rate this life honestly across four dimensions.
+        </p>
+        <DashboardGauges gauges={gauges} color={qlColor} onChange={setGauges} />
+      </section>
+
+      {/* Save */}
+      <div style={{ borderTop: '1px solid var(--ql-rule)', paddingTop: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
         <button
-          onClick={async () => {
-            await save().catch(() => {})
-            setStep(STEPS[Math.max(0, stepIndex - 1)])
-          }}
-          disabled={stepIndex === 0}
+          onClick={async () => { try { await save() } catch { /* error shown inline */ } }}
+          disabled={saving}
           style={{
-            background: 'none', border: 'none',
-            cursor: stepIndex === 0 ? 'not-allowed' : 'pointer',
-            fontSize: 12,
-            color: stepIndex === 0 ? 'var(--ql-ink-faint)' : 'var(--ql-ink-soft)',
+            padding: '10px 28px',
+            background: 'var(--ql-ink)',
+            color: 'var(--ql-paper)',
+            border: 'none',
             fontFamily: "'Inter', sans-serif",
+            fontSize: 13,
+            fontWeight: 500,
+            letterSpacing: '0.05em',
+            cursor: saving ? 'not-allowed' : 'pointer',
+            opacity: saving ? 0.6 : 1,
           }}
         >
-          Back
+          {saving ? 'Saving…' : 'Save'}
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-          {stepIndex < STEPS.length - 1 ? (
-            <button
-              onClick={async () => {
-                try { await save(); setStep(STEPS[stepIndex + 1]) } catch { /* error shown inline */ }
-              }}
-              disabled={saving}
-              style={{
-                background: qlColor,
-                border: 'none',
-                padding: '8px 16px',
-                fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
-                color: 'white',
-                cursor: saving ? 'not-allowed' : 'pointer',
-                opacity: saving ? 0.6 : 1,
-                fontFamily: "'Inter', sans-serif",
-              }}
-            >
-              {saving ? 'Saving…' : 'Save & Continue'}
-            </button>
-          ) : (
-            <button
-              onClick={async () => { try { await save() } catch { /* error shown inline */ } }}
-              disabled={saving}
-              style={{
-                background: 'var(--ql-ink)',
-                border: 'none',
-                padding: '8px 16px',
-                fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
-                color: 'var(--ql-paper)',
-                cursor: saving ? 'not-allowed' : 'pointer',
-                opacity: saving ? 0.6 : 1,
-                fontFamily: "'Inter', sans-serif",
-              }}
-            >
-              {saving ? 'Saving…' : 'Save'}
-            </button>
-          )}
-        </div>
+        {savedAt && !saving && (
+          <span style={{ fontSize: 11, color: 'var(--ql-ink-faint)', fontFamily: "'Caveat', cursive" }}>
+            saved {savedAt}
+          </span>
+        )}
       </div>
     </div>
   )

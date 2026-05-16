@@ -1,216 +1,103 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  MiniMap,
-  type Node,
-  type Edge,
-  BackgroundVariant,
-} from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
-import { type LifePlanType, type OdysseyPlan } from '@/lib/types'
+import { QL_COLORS, LIFE_NUMERALS, LIFE_SEAL_IDS, MILESTONE_CATEGORY_LABELS, type LifePlanType, type OdysseyPlan, type Milestone } from '@/lib/types'
+import { QLSeal, QLOrnament } from '@/components/ui/QLComponents'
 
 interface RoadmapViewProps {
   odysseyPlan: OdysseyPlan
 }
 
 const PLAN_TYPES: LifePlanType[] = ['expected', 'alternative', 'wildcard']
-
-const TYPE_COLORS: Record<LifePlanType, { bg: string; border: string; text: string }> = {
-  expected:    { bg: '#eaecf3', border: '#2c3e6b', text: '#2c3e6b' },
-  alternative: { bg: '#e8ede6', border: '#3f5b34', text: '#3f5b34' },
-  wildcard:    { bg: '#f4ede6', border: '#8a4f23', text: '#8a4f23' },
-}
-
-const LIFE_LABELS: Record<LifePlanType, string> = {
-  expected: 'Life I', alternative: 'Life II', wildcard: 'Life III',
-}
+const ROMAN_YEARS = ['I', 'II', 'III', 'IV', 'V']
 
 export default function RoadmapView({ odysseyPlan }: RoadmapViewProps) {
-  const [activeType, setActiveType] = useState<LifePlanType>('expected')
   const lifePlans = odysseyPlan.life_plans || []
-
-  const { nodes, edges } = useMemo(() => {
-    const lifePlans = odysseyPlan.life_plans || []
-    const lp = lifePlans.find((l: { type: string }) => l.type === activeType)
-    if (!lp) return { nodes: [], edges: [] }
-
-    const colors = TYPE_COLORS[activeType]
-    const milestones = [...(lp.milestones || [])].sort(
-      (a, b) => a.year !== b.year ? a.year - b.year : (a.position ?? 0) - (b.position ?? 0)
-    )
-
-    const LANE_W = 260
-    const NODE_H = 80
-    const X_OFFSET = 60
-
-    const byYear: Record<number, typeof milestones> = {}
-    for (let y = 1; y <= 5; y++) byYear[y] = []
-    milestones.forEach((m) => { if (byYear[m.year]) byYear[m.year].push(m) })
-
-    const nodes: Node[] = []
-    const edges: Edge[] = []
-
-    for (let y = 1; y <= 5; y++) {
-      nodes.push({
-        id: `year-${y}`,
-        type: 'default',
-        position: { x: X_OFFSET + (y - 1) * LANE_W, y: 0 },
-        data: { label: `Year ${y}` },
-        style: {
-          background: '#f3f1ea',
-          border: '1px solid #dad5c5',
-          borderRadius: 0,
-          color: '#9a9485',
-          fontSize: 12,
-          fontWeight: 600,
-          width: 200,
-          textAlign: 'center',
-          fontFamily: "'Caveat', cursive",
-          letterSpacing: '0.05em',
-        },
-      })
-    }
-
-    milestones.forEach((m) => {
-      const yearItems = byYear[m.year]
-      const posInYear = yearItems.indexOf(m)
-      nodes.push({
-        id: m.id,
-        type: 'default',
-        position: {
-          x: X_OFFSET + (m.year - 1) * LANE_W,
-          y: NODE_H + posInYear * (NODE_H + 20),
-        },
-        data: {
-          label: (
-            <div>
-              <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 2 }}>{m.title}</div>
-              <div style={{ fontSize: 10, opacity: 0.7, textTransform: 'capitalize' }}>{m.category}</div>
-            </div>
-          ),
-        },
-        style: {
-          background: colors.bg,
-          border: `1px solid ${colors.border}`,
-          borderRadius: 0,
-          color: colors.text,
-          fontSize: 12,
-          width: 200,
-          padding: 8,
-        },
-      })
-    })
-
-    let prev: string | null = null
-    for (let y = 1; y <= 5; y++) {
-      const ym = byYear[y]
-      if (ym.length > 0) {
-        if (prev) {
-          edges.push({
-            id: `e-${prev}-${ym[0].id}`,
-            source: prev,
-            target: ym[0].id,
-            style: { stroke: colors.border, strokeWidth: 2 },
-            animated: true,
-          })
-        }
-        for (let i = 0; i < ym.length - 1; i++) {
-          edges.push({
-            id: `e-same-${ym[i].id}-${ym[i + 1].id}`,
-            source: ym[i].id,
-            target: ym[i + 1].id,
-            style: { stroke: colors.border, strokeWidth: 1.5, strokeDasharray: '4 4' },
-          })
-        }
-        prev = ym[ym.length - 1].id
-      }
-    }
-
-    if (milestones.length === 0) {
-      nodes.push({
-        id: 'empty',
-        type: 'default',
-        position: { x: 200, y: 120 },
-        data: { label: 'No milestones yet — add some in the Wizard tab' },
-        style: {
-          background: '#f3f1ea',
-          border: '1px dashed #dad5c5',
-          borderRadius: 0,
-          color: '#9a9485',
-          fontSize: 12,
-          width: 280,
-          textAlign: 'center',
-        },
-      })
-    }
-
-    return { nodes, edges }
-  }, [activeType, odysseyPlan.life_plans])
+  const years = [1, 2, 3, 4, 5]
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Life selector */}
-      <div style={{
-        display: 'flex',
-        gap: 8,
-        padding: '12px 16px',
-        borderBottom: '1px solid var(--ql-rule)',
-        background: 'var(--ql-paper-deep)',
-        flexShrink: 0,
-      }}>
+    <div style={{ padding: '24px 20px', maxWidth: 720, fontFamily: "'Inter', sans-serif" }}>
+      {/* legend */}
+      <div style={{ display: 'flex', gap: 24, marginBottom: 32, flexWrap: 'wrap' }}>
         {PLAN_TYPES.map(type => {
           const lp = lifePlans.find((l: { type: string }) => l.type === type)
-          const active = activeType === type
-          const color = TYPE_COLORS[type].border
+          const color = QL_COLORS[type]
           return (
-            <button
-              key={type}
-              onClick={() => setActiveType(type)}
-              style={{
-                flex: 1,
-                padding: '8px 12px',
-                border: active ? `1px solid ${color}` : '1px solid var(--ql-rule)',
-                background: active ? TYPE_COLORS[type].bg : 'none',
-                fontSize: 12,
-                color: active ? color : 'var(--ql-ink-faint)',
-                cursor: 'pointer',
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: active ? 500 : 400,
-              }}
-            >
-              <div style={{ fontWeight: 600 }}>{LIFE_LABELS[type]}</div>
-              <div style={{ fontSize: 11, fontWeight: 400, opacity: 0.7, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <QLSeal id={LIFE_SEAL_IDS[type]} size={22} color={color} />
+              <span style={{ fontFamily: "'Caveat', cursive", fontSize: 14, color }}>
+                {LIFE_NUMERALS[type]}
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--ql-ink-faint)' }}>
                 {lp?.title || 'Untitled'}
-              </div>
-            </button>
+              </span>
+            </div>
           )
         })}
       </div>
 
-      {/* Flow canvas */}
-      <div className="flex-1">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          style={{ background: '#fbfaf6' }}
-          fitView
-          fitViewOptions={{ padding: 0.2 }}
-          nodesDraggable={false}
-          nodesConnectable={false}
-          elementsSelectable={false}
-          proOptions={{ hideAttribution: true }}
-        >
-          <Background color="#dad5c5" variant={BackgroundVariant.Dots} gap={20} />
-          <Controls />
-          <MiniMap nodeColor={(n) => {
-            if (n.id.startsWith('year-')) return '#dad5c5'
-            return TYPE_COLORS[activeType].border
-          }} />
-        </ReactFlow>
+      <QLOrnament width={180} />
+
+      {/* vertical timeline */}
+      <div style={{ marginTop: 28 }}>
+        {years.map((year, yi) => {
+          const rowsWithMilestones = PLAN_TYPES.flatMap(type => {
+            const lp = lifePlans.find((l: { type: string }) => l.type === type)
+            const ms = (lp?.milestones || []).filter((m: Milestone) => m.year === year)
+            return ms.map((m: Milestone) => ({ ...m, lifeType: type as LifePlanType }))
+          })
+
+          return (
+            <div key={year} style={{ marginBottom: 32 }}>
+              {/* year header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <span style={{
+                  fontFamily: "'Caveat', cursive",
+                  fontSize: 28,
+                  color: 'var(--ql-ink)',
+                  minWidth: 32,
+                  lineHeight: 1,
+                }}>
+                  {ROMAN_YEARS[yi]}
+                </span>
+                <div style={{ flex: 1, height: 1, background: 'var(--ql-rule)' }} />
+              </div>
+
+              {rowsWithMilestones.length === 0 ? (
+                <p style={{ paddingLeft: 44, fontSize: 12, color: 'var(--ql-ink-faint)', fontStyle: 'italic', margin: 0 }}>
+                  No milestones yet.
+                </p>
+              ) : (
+                <div style={{ paddingLeft: 44, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {rowsWithMilestones.map(m => {
+                    const color = QL_COLORS[m.lifeType]
+                    return (
+                      <div key={m.id} style={{
+                        padding: '8px 12px',
+                        borderLeft: `2px solid ${color}`,
+                        background: 'var(--ql-paper-deep)',
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                          <span style={{ fontFamily: "'Caveat', cursive", fontSize: 12, color, opacity: 0.8 }}>
+                            {LIFE_NUMERALS[m.lifeType]}
+                          </span>
+                          <span style={{ fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)' }}>
+                            {MILESTONE_CATEGORY_LABELS[m.category]}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--ql-ink)' }}>{m.title}</div>
+                        {m.description && (
+                          <div style={{ fontSize: 12, color: 'var(--ql-ink-faint)', fontStyle: 'italic', marginTop: 3 }}>
+                            {m.description}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

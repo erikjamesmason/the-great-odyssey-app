@@ -23,9 +23,9 @@ export default async function PlanLayout({ children, params }: PlanLayoutProps) 
   if (!plan) notFound()
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full">
       <PlanTabNav planId={id} planName={plan.name} />
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto pb-16 sm:pb-0">
         {children}
       </div>
     </div>

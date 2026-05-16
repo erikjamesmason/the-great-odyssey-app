@@ -1,49 +1,39 @@
 'use client'
 
 import { useState } from 'react'
-import { MILESTONE_CATEGORY_LABELS, type LifePlanType, type Milestone, type OdysseyPlan } from '@/lib/types'
+import { MILESTONE_CATEGORY_LABELS, LIFE_NUMERALS, LIFE_SEAL_IDS, QL_COLORS, HAND_LABELS, type LifePlanType, type Milestone, type OdysseyPlan } from '@/lib/types'
+import { QLSeal, QLOrnament, QLTicks } from '@/components/ui/QLComponents'
 
 interface TimelineViewProps {
   odysseyPlan: OdysseyPlan
 }
 
 const PLAN_TYPES: LifePlanType[] = ['expected', 'alternative', 'wildcard']
+const ROMAN_YEARS = ['I', 'II', 'III', 'IV', 'V']
 
-const LIFE_META: Record<LifePlanType, { color: string; label: string }> = {
-  expected:    { color: 'var(--ql-l1)', label: 'Life I' },
-  alternative: { color: 'var(--ql-l2)', label: 'Life II' },
-  wildcard:    { color: 'var(--ql-l3)', label: 'Life III' },
-}
-
-function MilestoneList({ milestones, color }: { milestones: Milestone[]; color: string }) {
-  if (milestones.length === 0) {
-    return <p style={{ fontSize: 11, color: 'var(--ql-ink-faint)', fontStyle: 'italic', margin: 0 }}>—</p>
-  }
+function MilestoneRow({ ms }: { ms: Milestone }) {
   return (
-    <>
-      {milestones.map((ms) => (
-        <div key={ms.id} style={{ marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-            <div style={{ width: 6, height: 6, background: color, flexShrink: 0, marginTop: 6 }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--ql-ink)', margin: 0, lineHeight: 1.4 }}>
-                {ms.title}
-              </p>
-              <span style={{
-                display: 'inline-block',
-                fontSize: 10,
-                color: 'var(--ql-ink-faint)',
-                border: '1px solid var(--ql-rule)',
-                padding: '1px 6px',
-                marginTop: 3,
-              }}>
-                {MILESTONE_CATEGORY_LABELS[ms.category]}
-              </span>
-            </div>
-          </div>
-        </div>
-      ))}
-    </>
+    <div style={{ padding: '6px 0', borderBottom: '1px solid var(--ql-rule)' }}>
+      <span style={{
+        display: 'block',
+        fontSize: 9,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        color: 'var(--ql-ink-faint)',
+        fontFamily: "'Inter', sans-serif",
+        marginBottom: 2,
+      }}>
+        {MILESTONE_CATEGORY_LABELS[ms.category]}
+      </span>
+      <span style={{ fontSize: 12, color: 'var(--ql-ink)', fontFamily: "'Inter', sans-serif" }}>
+        {ms.title}
+      </span>
+      {ms.description && (
+        <span style={{ display: 'block', fontSize: 11, color: 'var(--ql-ink-faint)', fontStyle: 'italic', marginTop: 2 }}>
+          {ms.description}
+        </span>
+      )}
+    </div>
   )
 }
 
@@ -52,38 +42,33 @@ export default function TimelineView({ odysseyPlan }: TimelineViewProps) {
   const [activeType, setActiveType] = useState<LifePlanType>('expected')
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 400, color: 'var(--ql-ink)', margin: '0 0 4px' }}>
-          Timeline — {odysseyPlan.name}
-        </h2>
-        <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', margin: 0 }}>
-          All three lives, side by side across five years.
-        </p>
-      </div>
-
-      {/* Desktop: 4-column grid */}
+    <div style={{ padding: '24px 20px', fontFamily: "'Inter', sans-serif" }}>
+      {/* Desktop: foldout grid */}
       <div className="hidden sm:block">
         {/* Column headers */}
-        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 1fr', gap: 1, marginBottom: 1 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '72px 1fr 1fr 1fr', marginBottom: 24 }}>
           <div />
           {PLAN_TYPES.map(type => {
             const lp = lifePlans.find((l: { type: string }) => l.type === type)
-            const m = LIFE_META[type]
+            const color = QL_COLORS[type]
             return (
               <div key={type} style={{
-                borderLeft: `3px solid ${m.color}`,
-                padding: '10px 14px',
-                background: 'var(--ql-paper-deep)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
+                padding: '12px 8px 16px',
+                borderBottom: `2px solid ${color}`,
               }}>
-                <div style={{
-                  fontSize: 10, fontWeight: 600, letterSpacing: '0.08em',
-                  textTransform: 'uppercase', color: m.color, marginBottom: 2,
-                }}>
-                  {m.label}
+                <QLSeal id={LIFE_SEAL_IDS[type]} size={36} color={color} />
+                <div style={{ fontFamily: "'Caveat', cursive", fontSize: 18, color }}>
+                  {LIFE_NUMERALS[type]}
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ql-ink)' }}>
-                  {lp?.title || <span style={{ color: 'var(--ql-ink-faint)', fontStyle: 'italic', fontWeight: 400 }}>Untitled</span>}
+                <div style={{ fontSize: 10, fontStyle: 'italic', color: 'var(--ql-ink-faint)', textAlign: 'center' }}>
+                  {HAND_LABELS[type]}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--ql-ink)', textAlign: 'center', marginTop: 2 }}>
+                  {lp?.title || <span style={{ color: 'var(--ql-ink-faint)', fontStyle: 'italic' }}>Untitled</span>}
                 </div>
               </div>
             )
@@ -92,73 +77,68 @@ export default function TimelineView({ odysseyPlan }: TimelineViewProps) {
 
         {/* Year rows */}
         {[1, 2, 3, 4, 5].map(year => (
-          <div key={year} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 1fr', gap: 1, marginBottom: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', paddingTop: 12 }}>
-              <div style={{
-                fontSize: 12,
+          <div key={year} style={{ display: 'grid', gridTemplateColumns: '72px 1fr 1fr 1fr', marginBottom: 4 }}>
+            {/* year label */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', paddingTop: 8 }}>
+              <span style={{
                 fontFamily: "'Caveat', cursive",
-                color: 'var(--ql-ink-faint)',
-                border: '1px solid var(--ql-rule)',
-                padding: '2px 8px',
+                fontSize: 24,
+                color: 'var(--ql-ink)',
               }}>
-                Year {year}
-              </div>
+                {ROMAN_YEARS[year - 1]}
+              </span>
             </div>
+
             {PLAN_TYPES.map(type => {
               const lp = lifePlans.find((l: { type: string }) => l.type === type)
-              const m = LIFE_META[type]
               const yearMilestones = (lp?.milestones || []).filter((ms: Milestone) => ms.year === year)
               return (
                 <div key={type} style={{
-                  minHeight: 80,
-                  border: '1px solid var(--ql-rule)',
-                  padding: 10,
-                  background: 'var(--ql-paper)',
+                  minHeight: 72,
+                  borderLeft: `1px solid var(--ql-rule)`,
+                  borderBottom: `1px solid var(--ql-rule)`,
+                  padding: '8px 12px',
                 }}>
-                  <MilestoneList milestones={yearMilestones} color={m.color} />
+                  {yearMilestones.length === 0
+                    ? <span style={{ fontSize: 11, color: 'var(--ql-ink-faint)', fontStyle: 'italic' }}>—</span>
+                    : yearMilestones.map((ms: Milestone) => <MilestoneRow key={ms.id} ms={ms} />)
+                  }
                 </div>
               )
             })}
           </div>
         ))}
 
-        {/* Dashboard comparison */}
-        <div style={{ marginTop: 32 }}>
-          <h3 style={{
-            fontSize: 10, fontWeight: 600, letterSpacing: '0.12em',
-            textTransform: 'uppercase', color: 'var(--ql-ink-faint)', marginBottom: 16,
-          }}>
-            Dashboard Comparison
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 1fr', gap: 1 }}>
+        {/* Gauge comparison */}
+        <div style={{ marginTop: 40 }}>
+          <QLOrnament width={200} />
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)', margin: '16px 0 12px' }}>
+            Dashboard
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '72px 1fr 1fr 1fr', gap: 0 }}>
             <div />
             {PLAN_TYPES.map(type => {
               const lp = lifePlans.find((l: { type: string }) => l.type === type)
-              const m = LIFE_META[type]
-              const gauges = [
+              const color = QL_COLORS[type]
+              const gaugeRows = [
                 { label: 'Resources',   value: lp?.gauge_resources   ?? 0 },
                 { label: 'Likeability', value: lp?.gauge_likeability ?? 0 },
                 { label: 'Confidence',  value: lp?.gauge_confidence  ?? 0 },
                 { label: 'Coherence',   value: lp?.gauge_coherence   ?? 0 },
               ]
               return (
-                <div key={type} style={{
-                  border: '1px solid var(--ql-rule)',
-                  padding: 14,
-                  background: 'var(--ql-paper-deep)',
-                }}>
-                  {gauges.map(g => (
-                    <div key={g.label} style={{ marginBottom: 10 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--ql-ink-faint)', marginBottom: 3 }}>
-                        <span>{g.label}</span>
-                        <span style={{ color: m.color }}>{g.value}</span>
+                <div key={type} style={{ padding: '12px 12px', borderLeft: '1px solid var(--ql-rule)' }}>
+                  {gaugeRows.map(g => (
+                    <div key={g.label} style={{ marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)' }}>
+                          {g.label}
+                        </span>
+                        <span style={{ fontFamily: "'Caveat', cursive", fontSize: 13, color }}>
+                          {g.value}
+                        </span>
                       </div>
-                      <div style={{ height: 1, background: 'var(--ql-rule)', position: 'relative' }}>
-                        <div style={{
-                          position: 'absolute', left: 0, top: 0, height: 1,
-                          width: `${g.value}%`, background: m.color,
-                        }} />
-                      </div>
+                      <QLTicks value={g.value} color={color} />
                     </div>
                   ))}
                 </div>
@@ -168,12 +148,11 @@ export default function TimelineView({ odysseyPlan }: TimelineViewProps) {
         </div>
       </div>
 
-      {/* Mobile: single-life stacked view */}
+      {/* Mobile: life selector + single-life view */}
       <div className="sm:hidden">
-        {/* Life selector tabs */}
-        <div style={{ display: 'flex', gap: 1, marginBottom: 16 }}>
+        <div style={{ display: 'flex', marginBottom: 20, borderBottom: '1px solid var(--ql-rule)' }}>
           {PLAN_TYPES.map(type => {
-            const m = LIFE_META[type]
+            const color = QL_COLORS[type]
             const isActive = activeType === type
             return (
               <button
@@ -181,108 +160,60 @@ export default function TimelineView({ odysseyPlan }: TimelineViewProps) {
                 onClick={() => setActiveType(type)}
                 style={{
                   flex: 1,
-                  padding: '8px 0',
-                  fontSize: 11,
-                  fontWeight: 600,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  fontFamily: "'Inter', sans-serif",
+                  padding: '10px 4px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: isActive ? `2px solid ${color}` : '2px solid transparent',
                   cursor: 'pointer',
-                  border: isActive ? `1px solid ${m.color}` : '1px solid var(--ql-rule)',
-                  background: isActive ? m.color : 'none',
-                  color: isActive ? 'var(--ql-paper)' : 'var(--ql-ink-faint)',
                 }}
               >
-                {m.label}
+                <QLSeal id={LIFE_SEAL_IDS[type]} size={24} color={color} />
+                <span style={{
+                  fontFamily: "'Caveat', cursive",
+                  fontSize: 14,
+                  color: isActive ? color : 'var(--ql-ink-faint)',
+                }}>
+                  {LIFE_NUMERALS[type]}
+                </span>
               </button>
             )
           })}
         </div>
 
-        {/* Selected life content */}
         {(() => {
           const lp = lifePlans.find((l: { type: string }) => l.type === activeType)
-          const m = LIFE_META[activeType]
-          const gauges = [
-            { label: 'Resources',   value: lp?.gauge_resources   ?? 0 },
-            { label: 'Likeability', value: lp?.gauge_likeability ?? 0 },
-            { label: 'Confidence',  value: lp?.gauge_confidence  ?? 0 },
-            { label: 'Coherence',   value: lp?.gauge_coherence   ?? 0 },
-          ]
+          const color = QL_COLORS[activeType]
           return (
             <>
-              {/* Life header */}
-              <div style={{
-                borderLeft: `3px solid ${m.color}`,
-                padding: '10px 14px',
-                background: 'var(--ql-paper-deep)',
-                marginBottom: 1,
-              }}>
-                <div style={{
-                  fontSize: 10, fontWeight: 600, letterSpacing: '0.08em',
-                  textTransform: 'uppercase', color: m.color, marginBottom: 2,
-                }}>
-                  {m.label}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontFamily: "'Caveat', cursive", fontSize: 16, color, marginBottom: 2 }}>
+                  {LIFE_NUMERALS[activeType]} — {HAND_LABELS[activeType]}
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ql-ink)' }}>
-                  {lp?.title || <span style={{ color: 'var(--ql-ink-faint)', fontStyle: 'italic', fontWeight: 400 }}>Untitled</span>}
+                <div style={{ fontSize: 14, color: 'var(--ql-ink)' }}>
+                  {lp?.title || <span style={{ color: 'var(--ql-ink-faint)', fontStyle: 'italic' }}>Untitled</span>}
                 </div>
               </div>
 
-              {/* Year rows */}
               {[1, 2, 3, 4, 5].map(year => {
                 const yearMilestones = (lp?.milestones || []).filter((ms: Milestone) => ms.year === year)
                 return (
-                  <div key={year} style={{ display: 'flex', gap: 1, marginBottom: 1 }}>
-                    <div style={{ width: 72, flexShrink: 0, display: 'flex', alignItems: 'flex-start', paddingTop: 12 }}>
-                      <div style={{
-                        fontSize: 12,
-                        fontFamily: "'Caveat', cursive",
-                        color: 'var(--ql-ink-faint)',
-                        border: '1px solid var(--ql-rule)',
-                        padding: '2px 6px',
-                      }}>
-                        Year {year}
-                      </div>
-                    </div>
-                    <div style={{
-                      flex: 1,
-                      minHeight: 60,
-                      border: '1px solid var(--ql-rule)',
-                      padding: 10,
-                      background: 'var(--ql-paper)',
-                    }}>
-                      <MilestoneList milestones={yearMilestones} color={m.color} />
+                  <div key={year} style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                    <span style={{ fontFamily: "'Caveat', cursive", fontSize: 20, color: 'var(--ql-ink)', minWidth: 24, paddingTop: 4 }}>
+                      {ROMAN_YEARS[year - 1]}
+                    </span>
+                    <div style={{ flex: 1, borderLeft: '1px solid var(--ql-rule)', paddingLeft: 12 }}>
+                      {yearMilestones.length === 0
+                        ? <span style={{ fontSize: 11, color: 'var(--ql-ink-faint)', fontStyle: 'italic' }}>—</span>
+                        : yearMilestones.map((ms: Milestone) => <MilestoneRow key={ms.id} ms={ms} />)
+                      }
                     </div>
                   </div>
                 )
               })}
-
-              {/* Dashboard gauges */}
-              <div style={{ marginTop: 24 }}>
-                <h3 style={{
-                  fontSize: 10, fontWeight: 600, letterSpacing: '0.12em',
-                  textTransform: 'uppercase', color: 'var(--ql-ink-faint)', marginBottom: 12,
-                }}>
-                  Dashboard
-                </h3>
-                <div style={{ border: '1px solid var(--ql-rule)', padding: 14, background: 'var(--ql-paper-deep)' }}>
-                  {gauges.map(g => (
-                    <div key={g.label} style={{ marginBottom: 10 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--ql-ink-faint)', marginBottom: 3 }}>
-                        <span>{g.label}</span>
-                        <span style={{ color: m.color }}>{g.value}</span>
-                      </div>
-                      <div style={{ height: 1, background: 'var(--ql-rule)', position: 'relative' }}>
-                        <div style={{
-                          position: 'absolute', left: 0, top: 0, height: 1,
-                          width: `${g.value}%`, background: m.color,
-                        }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </>
           )
         })()}

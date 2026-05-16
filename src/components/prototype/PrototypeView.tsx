@@ -2,32 +2,34 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { LIFE_PLAN_LABELS, type Prototype, type OdysseyPlan, type LifePlanType, type PrototypeType, type PrototypeStatus } from '@/lib/types'
-import { Plus, Trash2, FlaskConical, Users, BookOpen, Rocket } from 'lucide-react'
+import { QL_COLORS, LIFE_NUMERALS, LIFE_SEAL_IDS, type Prototype, type OdysseyPlan, type LifePlanType, type PrototypeType, type PrototypeStatus } from '@/lib/types'
+import { Plus, Trash2 } from 'lucide-react'
+import { QLSeal, QLOrnament } from '@/components/ui/QLComponents'
 
 interface PrototypeViewProps {
   odysseyPlan: OdysseyPlan
   initialPrototypes: Prototype[]
 }
 
-const TYPE_META: Record<PrototypeType, { label: string; icon: React.ReactNode; description: string }> = {
-  experiment:   { label: 'Experiment',              icon: <FlaskConical style={{ width: 12, height: 12 }} />, description: 'Try something small in this direction' },
-  interview:    { label: 'Informational Interview', icon: <Users        style={{ width: 12, height: 12 }} />, description: 'Talk to someone living this life' },
-  course:       { label: 'Course / Learning',       icon: <BookOpen     style={{ width: 12, height: 12 }} />, description: 'Build a skill or explore the field' },
-  side_project: { label: 'Side Project',            icon: <Rocket       style={{ width: 12, height: 12 }} />, description: 'Test the idea with a small project' },
+const PROTOTYPE_TYPE_LABELS: Record<PrototypeType, string> = {
+  experiment:   'experiment',
+  interview:    'conversation',
+  course:       'study',
+  side_project: 'side project',
 }
 
 const STATUS_LABELS: Record<PrototypeStatus, string> = {
-  planned:     'Planned',
-  in_progress: 'In Progress',
-  completed:   'Completed',
-  abandoned:   'Abandoned',
+  planned:     'planned',
+  in_progress: 'underway',
+  completed:   'done',
+  abandoned:   'let go',
 }
 
-const LIFE_COLORS: Record<LifePlanType, string> = {
-  expected:    'var(--ql-l1)',
-  alternative: 'var(--ql-l2)',
-  wildcard:    'var(--ql-l3)',
+const STATUS_COLORS: Record<PrototypeStatus, string> = {
+  planned:     'var(--ql-ink-faint)',
+  in_progress: 'var(--ql-l1)',
+  completed:   'var(--ql-l2)',
+  abandoned:   'var(--ql-ink-faint)',
 }
 
 const inputStyle: React.CSSProperties = {
@@ -84,52 +86,69 @@ export default function PrototypeView({ odysseyPlan, initialPrototypes }: Protot
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 720, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 }}>
+    <div style={{ padding: '32px 24px', maxWidth: 640, fontFamily: "'Inter', sans-serif" }}>
+      {/* header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 400, color: 'var(--ql-ink)', margin: '0 0 4px' }}>Prototyping</h2>
-          <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', margin: 0 }}>
-            Test your life paths with small, low-risk experiments before committing.
-          </p>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)', marginBottom: 4 }}>
+            Underway
+          </div>
+          <h2 style={{
+            fontFamily: "'Caveat', cursive",
+            fontSize: 26,
+            fontWeight: 400,
+            color: 'var(--ql-ink)',
+            margin: 0,
+          }}>
+            Prototypes
+          </h2>
         </div>
         <button
           onClick={() => setAdding(!adding)}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            background: 'none', border: '1px solid var(--ql-ink)',
+            background: 'var(--ql-ink)', border: 'none',
             padding: '8px 14px',
-            fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
-            color: 'var(--ql-ink)', cursor: 'pointer',
+            fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase',
+            color: 'var(--ql-paper)', cursor: 'pointer',
             fontFamily: "'Inter', sans-serif",
           }}
         >
-          <Plus style={{ width: 13, height: 13 }} />
-          Add prototype
+          <Plus style={{ width: 12, height: 12 }} />
+          Add
         </button>
       </div>
+
+      <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)', fontStyle: 'italic', margin: '0 0 24px' }}>
+        Small experiments to test a path before committing to it.
+      </p>
+
+      <QLOrnament width={160} />
 
       {/* Add form */}
       {adding && (
         <form onSubmit={handleAdd} style={{
           background: 'var(--ql-paper-deep)',
           border: '1px solid var(--ql-rule)',
-          padding: 24,
-          marginBottom: 24,
+          padding: 20,
+          margin: '24px 0',
           display: 'flex',
           flexDirection: 'column',
-          gap: 16,
+          gap: 14,
         }}>
-          <h3 style={{ fontSize: 12, fontWeight: 600, margin: 0, color: 'var(--ql-ink)' }}>New prototype</h3>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)' }}>
+            New prototype
+          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)', marginBottom: 6 }}>
-                Life path
+                Life
               </label>
               <select value={form.life_plan_id} onChange={e => setForm({ ...form, life_plan_id: e.target.value })} style={inputStyle}>
                 {lifePlans.map((lp: { id: string; type: LifePlanType; title: string }) => (
                   <option key={lp.id} value={lp.id}>
-                    {LIFE_PLAN_LABELS[lp.type].label}: {lp.title || 'Untitled'}
+                    {LIFE_NUMERALS[lp.type]}: {lp.title || 'Untitled'}
                   </option>
                 ))}
               </select>
@@ -139,8 +158,8 @@ export default function PrototypeView({ odysseyPlan, initialPrototypes }: Protot
                 Type
               </label>
               <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value as PrototypeType })} style={inputStyle}>
-                {(Object.entries(TYPE_META) as [PrototypeType, typeof TYPE_META[PrototypeType]][]).map(([k, v]) => (
-                  <option key={k} value={k}>{v.label}</option>
+                {(Object.entries(PROTOTYPE_TYPE_LABELS) as [PrototypeType, string][]).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
                 ))}
               </select>
             </div>
@@ -155,38 +174,38 @@ export default function PrototypeView({ odysseyPlan, initialPrototypes }: Protot
               required
               value={form.title}
               onChange={e => setForm({ ...form, title: e.target.value })}
-              placeholder="e.g. Coffee chat with a product designer"
+              placeholder="e.g. Coffee with a bookbinder on Vine St."
               style={inputStyle}
             />
           </div>
 
           <div>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)', marginBottom: 6 }}>
-              Description
+              Note
             </label>
             <textarea
               value={form.description}
               onChange={e => setForm({ ...form, description: e.target.value })}
-              placeholder="What will you do? What are you trying to learn?"
+              placeholder="What are you trying to learn from this?"
               rows={2}
               style={{ ...inputStyle, resize: 'none' }}
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)', marginBottom: 6 }}>
                 Status
               </label>
               <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value as PrototypeStatus })} style={inputStyle}>
-                {(Object.keys(STATUS_LABELS) as PrototypeStatus[]).map(k => (
-                  <option key={k} value={k}>{STATUS_LABELS[k]}</option>
+                {(Object.entries(STATUS_LABELS) as [PrototypeStatus, string][]).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
                 ))}
               </select>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)', marginBottom: 6 }}>
-                Scheduled date
+                Date
               </label>
               <input
                 type="date"
@@ -203,7 +222,7 @@ export default function PrototypeView({ odysseyPlan, initialPrototypes }: Protot
               onClick={() => setAdding(false)}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 12, color: 'var(--ql-ink-faint)', padding: '8px 16px',
+                fontSize: 12, color: 'var(--ql-ink-faint)', padding: '8px 12px',
                 fontFamily: "'Inter', sans-serif",
               }}
             >
@@ -213,103 +232,117 @@ export default function PrototypeView({ odysseyPlan, initialPrototypes }: Protot
               type="submit"
               style={{
                 background: 'var(--ql-ink)', border: 'none', padding: '8px 16px',
-                fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+                fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase',
                 color: 'var(--ql-paper)', cursor: 'pointer',
                 fontFamily: "'Inter', sans-serif",
               }}
             >
-              Add prototype
+              Add
             </button>
           </div>
         </form>
       )}
 
-      {/* Prototype list */}
-      {prototypes.length === 0 && !adding ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '64px 20px',
-          border: '1px dashed var(--ql-rule)',
-        }}>
-          <FlaskConical style={{ width: 24, height: 24, color: 'var(--ql-ink-faint)', margin: '0 auto 12px' }} />
-          <p style={{ fontSize: 13, color: 'var(--ql-ink-soft)', margin: '0 0 6px' }}>No prototypes yet</p>
-          <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', maxWidth: 280, margin: '0 auto' }}>
-            Add small experiments, interviews, or side projects to test each life path before committing.
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {prototypes.map(p => {
+      {/* List */}
+      <div style={{ marginTop: adding ? 0 : 24 }}>
+        {prototypes.length === 0 && !adding ? (
+          <div style={{
+            padding: '48px 20px',
+            border: '1px dashed var(--ql-rule)',
+            textAlign: 'center',
+          }}>
+            <p style={{ fontSize: 13, color: 'var(--ql-ink-faint)', fontStyle: 'italic', margin: 0 }}>
+              Nothing underway yet. Add the first experiment.
+            </p>
+          </div>
+        ) : (
+          prototypes.map(p => {
             const lp = lifePlans.find((l: { id: string }) => l.id === p.life_plan_id)
-            const typeMeta = TYPE_META[p.type]
-            const planColor = lp ? LIFE_COLORS[lp.type as LifePlanType] : 'var(--ql-ink-faint)'
+            const lifeType = (lp?.type ?? 'expected') as LifePlanType
+            const color = QL_COLORS[lifeType]
+
             return (
               <div key={p.id} style={{
-                background: 'var(--ql-paper-deep)',
-                border: '1px solid var(--ql-rule)',
-                padding: 18,
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 14,
+                padding: '14px 0',
+                borderBottom: '1px solid var(--ql-rule)',
               }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                      {lp && (
-                        <span style={{
-                          fontSize: 10, fontWeight: 600,
-                          color: planColor, border: `1px solid ${planColor}`,
-                          padding: '1px 8px', letterSpacing: '0.05em',
-                        }}>
-                          {LIFE_PLAN_LABELS[lp.type as LifePlanType].label}
-                        </span>
-                      )}
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 4,
-                        fontSize: 11, color: 'var(--ql-ink-faint)',
-                        border: '1px solid var(--ql-rule)', padding: '1px 8px',
-                      }}>
-                        {typeMeta.icon}
-                        {typeMeta.label}
-                      </span>
-                      <select
-                        value={p.status}
-                        onChange={e => handleStatusChange(p.id, e.target.value as PrototypeStatus)}
-                        style={{
-                          fontSize: 11,
-                          background: 'none',
-                          border: '1px solid var(--ql-rule)',
-                          padding: '1px 6px',
-                          color: 'var(--ql-ink-soft)',
-                          outline: 'none',
-                          cursor: 'pointer',
-                          fontFamily: "'Inter', sans-serif",
-                        }}
-                      >
-                        {(Object.keys(STATUS_LABELS) as PrototypeStatus[]).map(k => (
-                          <option key={k} value={k}>{STATUS_LABELS[k]}</option>
-                        ))}
-                      </select>
+                <QLSeal id={LIFE_SEAL_IDS[lifeType]} size={28} color={color} />
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                    <span style={{ fontFamily: "'Caveat', cursive", fontSize: 13, color }}>
+                      {LIFE_NUMERALS[lifeType]}
+                    </span>
+                    <span style={{
+                      fontSize: 9,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      color: 'var(--ql-ink-faint)',
+                    }}>
+                      {PROTOTYPE_TYPE_LABELS[p.type]}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: 14, color: 'var(--ql-ink)', marginBottom: 4 }}>{p.title}</div>
+
+                  {p.description && (
+                    <div style={{ fontSize: 12, color: 'var(--ql-ink-faint)', fontStyle: 'italic', marginBottom: 6 }}>
+                      {p.description}
                     </div>
-                    <h3 style={{ fontSize: 14, fontWeight: 500, color: 'var(--ql-ink)', margin: '0 0 4px' }}>{p.title}</h3>
-                    {p.description && (
-                      <p style={{ fontSize: 12, color: 'var(--ql-ink-faint)', margin: '0 0 4px', lineHeight: 1.5 }}>{p.description}</p>
-                    )}
+                  )}
+
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <select
+                      value={p.status}
+                      onChange={e => handleStatusChange(p.id, e.target.value as PrototypeStatus)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        fontSize: 10,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        color: STATUS_COLORS[p.status],
+                        fontFamily: "'Inter', sans-serif",
+                        cursor: 'pointer',
+                        padding: 0,
+                        outline: 'none',
+                      }}
+                    >
+                      {(Object.entries(STATUS_LABELS) as [PrototypeStatus, string][]).map(([val, lbl]) => (
+                        <option key={val} value={val}>{lbl}</option>
+                      ))}
+                    </select>
+
                     {p.scheduled_date && (
-                      <p style={{ fontSize: 11, color: 'var(--ql-ink-faint)', margin: 0 }}>
-                        Scheduled: {new Date(p.scheduled_date + 'T00:00:00').toLocaleDateString()}
-                      </p>
+                      <span style={{ fontFamily: "'Caveat', cursive", fontSize: 12, color: 'var(--ql-ink-faint)' }}>
+                        {new Date(p.scheduled_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
                     )}
                   </div>
-                  <button
-                    onClick={() => handleDelete(p.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ql-ink-faint)', display: 'flex', flexShrink: 0 }}
-                  >
-                    <Trash2 style={{ width: 14, height: 14 }} />
-                  </button>
                 </div>
+
+                <button
+                  onClick={() => handleDelete(p.id)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--ql-ink-faint)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexShrink: 0,
+                    padding: '2px 4px',
+                  }}
+                >
+                  <Trash2 style={{ width: 12, height: 12 }} />
+                </button>
               </div>
             )
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
     </div>
   )
 }

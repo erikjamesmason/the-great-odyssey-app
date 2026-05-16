@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { LayoutDashboard, Menu, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
+import { QLWordmark } from '@/components/ui/QLComponents'
 
 interface AppNavProps {
   user: User
@@ -76,7 +77,7 @@ export default function AppNav({ user }: AppNavProps) {
           flexShrink: 0,
           display: 'flex',
           flexDirection: 'column',
-          padding: '24px 0',
+          padding: '0 0 24px',
           borderRight: '1px solid var(--ql-rule)',
           background: 'var(--ql-paper-deep)',
           zIndex: 50,
@@ -102,24 +103,29 @@ export default function AppNav({ user }: AppNavProps) {
           <X style={{ width: 14, height: 14 }} />
         </button>
 
-        <div style={{ padding: '0 20px', marginBottom: 32 }}>
-          <div style={{
-            fontSize: 10,
-            fontWeight: 600,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: 'var(--ql-ink-soft)',
-            lineHeight: 1.4,
-          }}>
-            The Great Odyssey
-          </div>
-          <div style={{
-            fontFamily: "'Caveat', cursive",
-            fontSize: 16,
-            color: 'var(--ql-ink-faint)',
-            marginTop: 2,
-          }}>
-            Vol. I
+        <div style={{ padding: '16px 16px 20px', borderBottom: '1px solid var(--ql-rule)', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <QLWordmark size={28} />
+            <div>
+              <div style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'var(--ql-ink)',
+              }}>
+                The Great Odyssey
+              </div>
+              <div style={{
+                fontFamily: "'Caveat', cursive",
+                fontSize: 13,
+                color: 'var(--ql-ink-faint)',
+                marginTop: 1,
+              }}>
+                your chart
+              </div>
+            </div>
           </div>
         </div>
 
