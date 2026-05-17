@@ -4,24 +4,14 @@ import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { QLSeal } from '@/components/ui/QLComponents'
-import type { LifePlanType } from '@/lib/types'
-
-const QL_COLORS: Record<LifePlanType, string> = {
-  expected: 'var(--ql-l1)',
-  alternative: 'var(--ql-l2)',
-  wildcard: 'var(--ql-l3)',
-}
-
-const LIFE_SEAL_IDS: Record<LifePlanType, 'L1' | 'L2' | 'L3'> = {
-  expected: 'L1',
-  alternative: 'L2',
-  wildcard: 'L3',
-}
+import { QL_COLORS, LIFE_SEAL_IDS, LIFE_NUMERALS, HAND_LABELS, type LifePlanType } from '@/lib/types'
 
 interface PlanTabNavProps {
   planId: string
   planName: string
 }
+
+const PLAN_TYPES: LifePlanType[] = ['expected', 'alternative', 'wildcard']
 
 export default function PlanTabNav({ planId, planName }: PlanTabNavProps) {
   const pathname = usePathname()
@@ -46,33 +36,17 @@ export default function PlanTabNav({ planId, planName }: PlanTabNavProps) {
     display: 'flex',
     alignItems: 'center',
     gap: 8,
-    padding: '10px 16px',
+    padding: '9px 16px',
     fontFamily: "'Inter', sans-serif",
     fontSize: 11,
     fontWeight: active ? 600 : 400,
     letterSpacing: '0.06em',
     textTransform: 'uppercase',
-    color: active ? 'var(--ql-ink)' : 'var(--ql-ink-faint)',
+    color: active ? 'var(--ql-ink)' : 'var(--ql-ink-soft)',
     textDecoration: 'none',
     borderLeft: active ? '2px solid var(--ql-ink)' : '2px solid transparent',
     background: active ? 'var(--ql-paper-deep)' : 'none',
   })
-
-  const lifeTab = (type: LifePlanType, numeral: string, handLabel: string) => {
-    const active = isActive('wizard', type)
-    const color = QL_COLORS[type]
-    return (
-      <Link href={`${base}/wizard?life=${type}`} style={tabStyle(active)}>
-        <QLSeal id={LIFE_SEAL_IDS[type]} size={18} color={color} />
-        <span>
-          <span style={{ fontFamily: "'Caveat', cursive", fontSize: 14, marginRight: 4, color: active ? color : 'var(--ql-ink-faint)' }}>
-            {numeral}
-          </span>
-          <span className="hidden sm:inline">{handLabel}</span>
-        </span>
-      </Link>
-    )
-  }
 
   return (
     <>
@@ -111,15 +85,29 @@ export default function PlanTabNav({ planId, planName }: PlanTabNavProps) {
 
         <div style={{ borderTop: '1px solid var(--ql-rule)', margin: '4px 0' }} />
 
-        {lifeTab('expected', 'I', 'Life I')}
-        {lifeTab('alternative', 'II', 'Life II')}
-        {lifeTab('wildcard', 'III', 'Life III')}
+        {PLAN_TYPES.map(type => {
+          const active = isActive('wizard', type)
+          const color = QL_COLORS[type]
+          return (
+            <Link key={type} href={`${base}/wizard?life=${type}`} style={tabStyle(active)}>
+              <QLSeal id={LIFE_SEAL_IDS[type]} size={16} color={active ? color : 'var(--ql-ink-faint)'} />
+              <span style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                <span style={{ fontFamily: "'Caveat', cursive", fontSize: 15, color: active ? color : 'var(--ql-ink-soft)', lineHeight: 1 }}>
+                  {LIFE_NUMERALS[type]}
+                </span>
+                <span style={{ fontSize: 10, color: active ? 'var(--ql-ink-soft)' : 'var(--ql-ink-faint)', letterSpacing: '0.04em', fontStyle: 'italic', textTransform: 'none', fontWeight: 400 }}>
+                  {HAND_LABELS[type]}
+                </span>
+              </span>
+            </Link>
+          )
+        })}
 
         <div style={{ borderTop: '1px solid var(--ql-rule)', margin: '4px 0' }} />
 
         <Link href={`${base}/timeline`} style={tabStyle(isActive('timeline'))}>Foldout</Link>
-        <Link href={`${base}/roadmap`} style={tabStyle(isActive('roadmap'))}>The line</Link>
-        <Link href={`${base}/prototype`} style={tabStyle(isActive('prototype'))}>Underway</Link>
+        <Link href={`${base}/roadmap`} style={tabStyle(isActive('roadmap'))}>Roadmap</Link>
+        <Link href={`${base}/prototype`} style={tabStyle(isActive('prototype'))}>Prototypes</Link>
         <Link href={`${base}/reflections`} style={tabStyle(isActive('reflections'))}>Marginalia</Link>
       </nav>
 
@@ -143,13 +131,13 @@ export default function PlanTabNav({ planId, planName }: PlanTabNavProps) {
           { href: `${base}/wizard?life=alternative`, label: 'II' },
           { href: `${base}/wizard?life=wildcard`, label: 'III' },
           { href: `${base}/timeline`, label: 'Fold' },
-          { href: `${base}/roadmap`, label: 'Line' },
-          { href: `${base}/prototype`, label: 'Now' },
+          { href: `${base}/roadmap`, label: 'Road' },
+          { href: `${base}/prototype`, label: 'Proto' },
           { href: `${base}/reflections`, label: 'Notes' },
         ] as const).map(({ href, label }) => (
           <Link key={href} href={href} style={{
             flex: 1,
-            minWidth: 40,
+            minWidth: 36,
             padding: '10px 4px',
             textAlign: 'center',
             fontFamily: "'Inter', sans-serif",
