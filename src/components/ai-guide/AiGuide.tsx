@@ -12,34 +12,24 @@ interface Message {
 }
 
 interface AiGuideProps {
-  lifePlanId: string
-  lifePlanType: LifePlanType
+  planId: string
+  activeLifeType: LifePlanType
 }
 
-const STARTER_PROMPTS: Record<LifePlanType, string[]> = {
-  expected: [
-    'Help me write a title for this life path.',
-    'What milestones should I consider for year 1?',
-    'My dashboard shows high likeability but low resources — help me think through this.',
-  ],
-  alternative: [
-    "I'm struggling to imagine a truly different life — help me brainstorm.",
-    'What questions should this alternative life answer?',
-    'What would be the first step to explore this path?',
-  ],
-  wildcard: [
-    'My wild card feels too unrealistic — help me think about it differently.',
-    'How do I turn this dream into something actionable?',
-    'What would year 1 look like if I actually pursued this?',
-  ],
-}
+const STARTER_PROMPTS = [
+  'Which of my three lives am I most energized by right now?',
+  'Help me surface tensions or contradictions across my plans.',
+  'What do my marginalia notes suggest I keep returning to?',
+  'Which prototypes should I prioritize, and why?',
+  "My gauges feel off — help me think through what's misaligned.",
+]
 
-export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
+export default function AiGuide({ planId, activeLifeType }: AiGuideProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const qlColor = QL_COLORS[lifePlanType]
+  const qlColor = QL_COLORS[activeLifeType]
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -57,16 +47,13 @@ export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
       const res = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lifePlanId, lifePlanType, messages: newMessages }),
+        body: JSON.stringify({ planId, activeLifeType, messages: newMessages }),
       })
       if (!res.ok) throw new Error(`api error ${res.status}`)
       const data = await res.json()
       setMessages([...newMessages, { role: 'assistant', content: data.message }])
     } catch {
-      setMessages([...newMessages, {
-        role: 'assistant',
-        content: 'Something went wrong. Try again.',
-      }])
+      setMessages([...newMessages, { role: 'assistant', content: 'Something went wrong. Try again.' }])
     } finally {
       setLoading(false)
     }
@@ -85,26 +72,20 @@ export default function AiGuide({ lifePlanId, lifePlanType }: AiGuideProps) {
       <div className="flex-1 overflow-auto" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {messages.length === 0 && (
           <div>
-            {/* context line */}
-            <div style={{
-              paddingBottom: 16,
-              borderBottom: '1px solid var(--ql-rule)',
-              marginBottom: 16,
-            }}>
+            <div style={{ paddingBottom: 16, borderBottom: '1px solid var(--ql-rule)', marginBottom: 16 }}>
               <div style={{ fontFamily: "'Caveat', cursive", fontSize: 15, color: qlColor, marginBottom: 2 }}>
-                {LIFE_NUMERALS[lifePlanType]} — {HAND_LABELS[lifePlanType]}
+                {LIFE_NUMERALS[activeLifeType]} — {HAND_LABELS[activeLifeType]}
               </div>
               <div style={{ fontSize: 12, color: 'var(--ql-ink-faint)', fontStyle: 'italic' }}>
-                Questions, ideas, or what&rsquo;s stuck.
+                The guide can see your lives, prototypes, and notes.
               </div>
             </div>
 
-            {/* starter prompts */}
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ql-ink-faint)', marginBottom: 10 }}>
               Start here
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {STARTER_PROMPTS[lifePlanType].map((prompt, i) => (
+              {STARTER_PROMPTS.map((prompt, i) => (
                 <button
                   key={i}
                   onClick={() => sendMessage(prompt)}

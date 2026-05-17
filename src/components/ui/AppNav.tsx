@@ -83,27 +83,7 @@ export default function AppNav({ user }: AppNavProps) {
           zIndex: 50,
         }}
       >
-        {/* close button — mobile only */}
-        <button
-          onClick={() => setNavOpen(false)}
-          aria-label="Close navigation"
-          className="sm:hidden"
-          style={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--ql-ink-faint)',
-            display: 'flex',
-            padding: 4,
-          }}
-        >
-          <X style={{ width: 14, height: 14 }} />
-        </button>
-
-        <div style={{ padding: '16px 16px 20px', borderBottom: '1px solid var(--ql-rule)', marginBottom: 16 }}>
+        <div style={{ padding: '12px 12px 16px 16px', borderBottom: '1px solid var(--ql-rule)', marginBottom: 16, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <QLWordmark size={28} />
             <div>
@@ -127,6 +107,25 @@ export default function AppNav({ user }: AppNavProps) {
               </div>
             </div>
           </div>
+
+          {/* close button — mobile only, inline in header row */}
+          <button
+            onClick={() => setNavOpen(false)}
+            aria-label="Close navigation"
+            className="sm:hidden"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--ql-ink-faint)',
+              display: 'flex',
+              padding: 4,
+              flexShrink: 0,
+              marginTop: 2,
+            }}
+          >
+            <X style={{ width: 14, height: 14 }} />
+          </button>
         </div>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>

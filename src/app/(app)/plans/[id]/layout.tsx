@@ -16,19 +16,17 @@ export default async function PlanLayout({ children, params }: PlanLayoutProps) 
 
   const { data: plan } = await supabase
     .from('odyssey_plans')
-    .select('id, name, life_plans(id, type)')
+    .select('id, name')
     .eq('id', id)
     .eq('user_id', user.id)
     .single()
 
   if (!plan) notFound()
 
-  const lifePlans = (plan.life_plans ?? []) as { id: string; type: string }[]
-
   return (
     <div className="flex h-full">
       <PlanTabNav planId={id} planName={plan.name} />
-      <PlanGuideShell lifePlans={lifePlans}>
+      <PlanGuideShell planId={id}>
         {children}
       </PlanGuideShell>
     </div>
