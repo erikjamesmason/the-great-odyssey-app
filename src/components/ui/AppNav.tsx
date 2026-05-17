@@ -31,7 +31,7 @@ export default function AppNav({ user }: AppNavProps) {
       <button
         onClick={() => setNavOpen(true)}
         aria-label="Open navigation"
-        className="sm:hidden"
+        className="flex sm:hidden"
         style={{
           position: 'fixed',
           top: 12,
@@ -40,7 +40,6 @@ export default function AppNav({ user }: AppNavProps) {
           background: 'var(--ql-paper-deep)',
           border: '1px solid var(--ql-rule)',
           cursor: 'pointer',
-          display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: 6,
@@ -112,13 +111,12 @@ export default function AppNav({ user }: AppNavProps) {
           <button
             onClick={() => setNavOpen(false)}
             aria-label="Close navigation"
-            className="sm:hidden"
+            className="flex sm:hidden"
             style={{
               background: 'none',
               border: 'none',
               cursor: 'pointer',
               color: 'var(--ql-ink-faint)',
-              display: 'flex',
               padding: 4,
               flexShrink: 0,
               marginTop: 2,
