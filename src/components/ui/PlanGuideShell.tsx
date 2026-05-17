@@ -6,26 +6,20 @@ import { MessageCircle, X } from 'lucide-react'
 import AiGuide from '@/components/ai-guide/AiGuide'
 import type { LifePlanType } from '@/lib/types'
 
-interface LifePlanStub {
-  id: string
-  type: string
-}
-
 interface PlanGuideShellProps {
   children: React.ReactNode
-  lifePlans: LifePlanStub[]
+  planId: string
 }
 
 const PLAN_TYPES: LifePlanType[] = ['expected', 'alternative', 'wildcard']
 
-export default function PlanGuideShell({ children, lifePlans }: PlanGuideShellProps) {
+export default function PlanGuideShell({ children, planId }: PlanGuideShellProps) {
   const [aiOpen, setAiOpen] = useState(false)
   const searchParams = useSearchParams()
 
   const paramLife = searchParams.get('life') as LifePlanType | null
   const activeType: LifePlanType =
     paramLife && PLAN_TYPES.includes(paramLife) ? paramLife : 'expected'
-  const activePlan = lifePlans.find(lp => lp.type === activeType) ?? lifePlans[0]
 
   const headerStyle: React.CSSProperties = {
     display: 'flex',
@@ -62,9 +56,7 @@ export default function PlanGuideShell({ children, lifePlans }: PlanGuideShellPr
     </div>
   )
 
-  const guideContent = activePlan
-    ? <AiGuide lifePlanId={activePlan.id} lifePlanType={activePlan.type as LifePlanType} />
-    : <p style={{ padding: 16, fontSize: 13, color: 'var(--ql-ink-faint)', fontFamily: "'Inter', sans-serif" }}>No plan data.</p>
+  const guideContent = <AiGuide planId={planId} activeLifeType={activeType} />
 
   return (
     <div className="flex h-full">
